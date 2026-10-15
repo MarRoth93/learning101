@@ -1,0 +1,1920 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESP32 Board Basics</title>
+<meta name="description" content="An interactive beginner lesson: the ESP32 DevKitC board, its pins, and wiring a button and an LED — with experiments, exercises and troubleshooting.">
+<style>
+:root{
+  --bg:#f6f5f1; --surface:#ffffff; --surface2:#efede7; --text:#1c2126; --muted:#56606c; --border:#d8d4ca;
+  --accent:#1d6a86; --accent-ink:#ffffff; --accent-soft:#dcedf3;
+  --ok:#22713a; --ok-soft:#e1f2e5; --bad:#a8231b; --bad-soft:#fbe5e3; --warn:#8f5200; --warn-soft:#fdf0dc;
+  --c-power:#c92a2a; --c-gnd:#2f3439; --c-gpio:#2b8a3e; --c-in:#1864ab; --c-strap:#c4520c; --c-serial:#6741d9; --c-flash:#7d858d; --c-en:#a61e4d;
+  --w-sig:#d49b00; --w-btn:#2b8a3e; --w-pwr:#c92a2a; --w-gnd:#2f3439;
+  --pcb:#163a2b; --pcb-ink:#dff2e6; --shield:#b6bcc2; --chip:#26292d; --chip-ink:#e8eaec;
+  --glow:#ff2a1f; --code-bg:#f1efe9;
+  --radius:10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121518; --surface:#1a1e22; --surface2:#23292f; --text:#e6e8eb; --muted:#a2acb7; --border:#343c45;
+    --accent:#62b6d4; --accent-ink:#0a1a20; --accent-soft:#16333d;
+    --ok:#74d38a; --ok-soft:#163222; --bad:#ff8f86; --bad-soft:#3a1a18; --warn:#ffbe5c; --warn-soft:#3a2a12;
+    --c-power:#ff6b6b; --c-gnd:#cfd4d9; --c-gpio:#69db7c; --c-in:#74c0fc; --c-strap:#ffa94d; --c-serial:#b197fc; --c-flash:#9aa1a8; --c-en:#f783ac;
+    --w-sig:#ffd43b; --w-btn:#8ce99a; --w-pwr:#ff8787; --w-gnd:#cfd4d9;
+    --code-bg:#20252a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+    --bg:#121518; --surface:#1a1e22; --surface2:#23292f; --text:#e6e8eb; --muted:#a2acb7; --border:#343c45;
+    --accent:#62b6d4; --accent-ink:#0a1a20; --accent-soft:#16333d;
+    --ok:#74d38a; --ok-soft:#163222; --bad:#ff8f86; --bad-soft:#3a1a18; --warn:#ffbe5c; --warn-soft:#3a2a12;
+    --c-power:#ff6b6b; --c-gnd:#cfd4d9; --c-gpio:#69db7c; --c-in:#74c0fc; --c-strap:#ffa94d; --c-serial:#b197fc; --c-flash:#9aa1a8; --c-en:#f783ac;
+    --w-sig:#ffd43b; --w-btn:#8ce99a; --w-pwr:#ff8787; --w-gnd:#cfd4d9;
+    --code-bg:#20252a;
+    color-scheme: dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:17px/1.62 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+a{color:var(--accent)}
+h1,h2,h3,h4{line-height:1.25;margin:1.4em 0 .5em}
+h1{font-size:1.9rem;margin-top:.2em}
+h2{font-size:1.4rem}
+h3{font-size:1.12rem}
+p,ul,ol{margin:.6em 0}
+code,kbd,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em}
+code{background:var(--code-bg);padding:.08em .32em;border-radius:4px}
+pre{background:var(--code-bg);padding:12px 14px;border-radius:8px;overflow-x:auto;line-height:1.5;border:1px solid var(--border)}
+pre code{background:none;padding:0}
+mark{background:var(--warn-soft);color:var(--warn);border-radius:3px;padding:0 2px}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh}
+.toc{position:sticky;top:0;height:100vh;overflow:auto;background:var(--surface);border-right:1px solid var(--border);padding:18px 14px}
+.toc summary{list-style:none;font-weight:700;font-size:1.05rem;cursor:pointer}
+.toc summary::-webkit-details-marker{display:none}
+.toc ol{list-style:none;padding:0;margin:12px 0}
+.toc li{margin:2px 0}
+.toc a{display:grid;grid-template-columns:26px 1fr auto;gap:6px;align-items:start;padding:7px 8px;border-radius:8px;color:var(--text);text-decoration:none;font-size:.93rem;line-height:1.35}
+.toc a:hover{background:var(--surface2)}
+.toc a[aria-current="page"]{background:var(--accent-soft);font-weight:650}
+.toc .num{font-variant-numeric:tabular-nums;color:var(--muted)}
+.toc .meta{font-size:.75rem;color:var(--muted);white-space:nowrap;text-align:right}
+.toc .meta .v{color:var(--ok)}
+.progress{font-size:.82rem;color:var(--muted);border-top:1px solid var(--border);padding-top:10px;margin-top:6px}
+.progress strong{color:var(--text)}
+.bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin:3px 0 8px}
+.bar>i{display:block;height:100%;background:var(--accent);width:0}
+.bar.ex>i{background:var(--ok)}
+.tool-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.small-btn{border:1px solid var(--border);background:var(--surface2);border-radius:6px;padding:3px 9px;font-size:.8rem}
+
+main{padding:28px 36px 90px;max-width:860px;width:100%}
+.chapter{display:none}
+.chapter.active{display:block}
+.kicker{color:var(--muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;margin:0}
+.lead{font-size:1.08rem}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:40px;border-top:1px solid var(--border);padding-top:18px}
+.pager button{border:1px solid var(--border);background:var(--surface);padding:10px 16px;border-radius:8px;max-width:48%;text-align:left}
+.pager button.next{margin-left:auto;text-align:right;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin:16px 0}
+.note{border-left:4px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+.warnbox{border-left:4px solid var(--warn);background:var(--warn-soft);padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+.dangerbox{border-left:4px solid var(--bad);background:var(--bad-soft);padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+.tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:4px;padding:1px 6px;margin-right:6px;vertical-align:1px;border:1px solid currentColor}
+.tag.req{color:var(--bad)} .tag.conv{color:var(--accent)} .tag.opt{color:var(--muted)}
+details.deep{border:1px dashed var(--border);border-radius:8px;padding:8px 12px;margin:14px 0;background:var(--surface)}
+details.deep>summary{cursor:pointer;font-weight:600;color:var(--muted)}
+details.deep>summary::before{content:"Optional depth · "; font-weight:400}
+.fig{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin:16px 0}
+.fig svg{display:block;width:100%;height:auto}
+.fig figcaption,.caption{font-size:.86rem;color:var(--muted);margin-top:6px}
+.split{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.btn{border:1px solid var(--border);background:var(--surface2);padding:7px 13px;border-radius:8px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+label.inline{display:inline-flex;gap:6px;align-items:center}
+select{max-width:100%}
+select,input[type=number],textarea{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px}
+textarea{width:100%;min-height:72px;resize:vertical}
+input[type=range]{width:100%;accent-color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:.92rem;margin:12px 0}
+th,td{border:1px solid var(--border);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--surface2)}
+.tablewrap{overflow-x:auto}
+.xcard dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:0;font-size:.92rem}
+.xcard dt{font-weight:700;color:var(--muted)}
+.xcard dd{margin:0}
+.outcomes li{margin:6px 0}
+
+/* exercises */
+.quiz,.think,.numcheck,.task{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin:18px 0}
+.qlabel{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin:0 0 4px}
+.qtext{font-weight:600;margin-top:0}
+.opts{display:grid;gap:8px;margin:10px 0}
+.opt{text-align:left;border:1px solid var(--border);background:var(--surface2);border-radius:8px;padding:9px 12px;width:100%}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.why{display:none;font-size:.93rem;padding:6px 12px 8px;border-left:3px solid var(--border);margin:-2px 0 4px 10px}
+.why.show{display:block}
+.why .verdict{font-weight:700}
+.why.good .verdict{color:var(--ok)} .why.badv .verdict{color:var(--bad)}
+details.hint{margin:6px 0}
+details.hint>summary{cursor:pointer;color:var(--warn);font-weight:600;font-size:.92rem}
+.fb{margin-top:8px;font-size:.94rem}
+.fb.good{color:var(--ok)} .fb.badv{color:var(--bad)}
+.answer{border-top:1px dashed var(--border);margin-top:10px;padding-top:8px}
+.solved-badge{float:right;font-size:.75rem;color:var(--ok);font-weight:700}
+
+/* board svg */
+.pcb{fill:var(--pcb)}
+.ant-bg{fill:#0f2b1f}
+.ant{fill:none;stroke:#d7b56d;stroke-width:3}
+.shield{fill:var(--shield);stroke:#8a9097}
+.shield-t{font-size:11px;fill:#2a2e33;text-anchor:middle;font-weight:700}
+.chip{fill:var(--chip);stroke:#555}
+.chip-t{font-size:10px;fill:var(--chip-ink);text-anchor:middle}
+.tiny{font-size:10px;fill:var(--pcb-ink);text-anchor:middle}
+.pled{fill:#ff6b5e;stroke:#fff;stroke-width:1}
+.bbtn{fill:#c9ccd0;stroke:#777}
+.bbtn-cap{fill:#2b2e31}
+.usb{fill:#b9bec4;stroke:#7d848b}
+.usb-hole{fill:#30343a}
+.part{cursor:pointer}
+.part:focus{outline:none}
+.part .hl{fill:none;stroke:transparent;stroke-width:3;stroke-dasharray:5 3}
+.part:hover .hl,.part:focus-visible .hl{stroke:var(--w-sig)}
+.part.sel .hl{stroke:var(--w-sig);stroke-dasharray:none}
+.pinglyph{stroke:#000;stroke-opacity:.35}
+.pinhole{fill:#1b1b1b}
+.plabel{font-size:11.5px;fill:var(--text)}
+.hdr-t{font-size:10px;fill:var(--pcb-ink);text-anchor:middle;font-weight:700}
+.pin{cursor:pointer}
+.pin.dim{opacity:.18}
+.pin.sel .pinglyph{stroke:var(--w-sig);stroke-width:3;stroke-opacity:1}
+.cat-power{fill:var(--c-power)} .cat-gnd{fill:var(--c-gnd)} .cat-gpio{fill:var(--c-gpio)} .cat-inonly{fill:var(--c-in)}
+.cat-strap{fill:var(--c-strap)} .cat-serial{fill:var(--c-serial)} .cat-flash{fill:var(--c-flash)} .cat-en{fill:var(--c-en)}
+.ovl path{fill:none;stroke-width:2.5;stroke-dasharray:7 5}
+.ovl text{font-size:10.5px;font-weight:700;paint-order:stroke;stroke:var(--pcb);stroke-width:3px}
+.ovl-power path{stroke:#ff8a80} .ovl-power text{fill:#ffb3ad}
+.ovl-data path{stroke:#b9a6ff} .ovl-data text{fill:#d3c8ff}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip-f{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:999px;padding:3px 10px 3px 6px;font-size:.84rem;background:var(--surface)}
+.chip-f input{margin:0}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,.3)}
+.infopanel h3{margin-top:0}
+.infopanel dl{margin:0}
+.infopanel dt{font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:8px}
+.infopanel dd{margin:2px 0 0}
+
+/* circuits */
+.wire{fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.w-sig{stroke:var(--w-sig)} .w-btn{stroke:var(--w-btn)} .w-pwr{stroke:var(--w-pwr)} .w-gnd{stroke:var(--w-gnd)}
+.w-missing{stroke:var(--bad);stroke-dasharray:6 6;stroke-width:3}
+.sym{fill:none;stroke:var(--text);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.symfill{fill:var(--surface);stroke:var(--text);stroke-width:2.5}
+.ledfill{fill:var(--surface);stroke:var(--text);stroke-width:2.5;stroke-linejoin:round}
+.slabel{font-size:12px;fill:var(--text)}
+.smuted{font-size:11px;fill:var(--muted)}
+.sbad{font-size:12px;fill:var(--bad);font-weight:700}
+.blk{fill:var(--surface2);stroke:var(--border);stroke-width:2}
+.glow{fill:var(--glow)}
+.flow{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:3 14;stroke-linecap:round;animation:flow 1.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-34}}
+.paused .flow{animation-play-state:paused}
+.static-arrow{fill:var(--accent)}
+.rail-p{stroke:var(--w-pwr);stroke-width:3} .rail-g{stroke:var(--c-in);stroke-width:3}
+
+.budget{display:flex;height:34px;border-radius:6px;overflow:hidden;border:1px solid var(--border);font-size:.8rem;font-weight:600}
+.budget>div{display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;transition:width .25s}
+.b-r{background:#e9c46a;color:#222} .b-led{background:#e76f51;color:#fff}
+.meter{position:relative;height:22px;border-radius:6px;background:linear-gradient(90deg,#adb5bd 0 6.67%,#74c69d 6.67% 33.3%,#ffd166 33.3% 66.6%,#ef476f 66.6% 100%);border:1px solid var(--border)}
+.meter .needle{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--text);border-radius:2px;transition:left .25s}
+.meter-scale{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted)}
+.readout{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;margin:8px 0;overflow-x:auto}
+.status{font-weight:600;padding:8px 12px;border-radius:8px;margin:8px 0}
+.status.good{background:var(--ok-soft);color:var(--ok)}
+.status.mid{background:var(--warn-soft);color:var(--warn)}
+.status.badv{background:var(--bad-soft);color:var(--bad)}
+
+.serial{font-family:ui-monospace,Menlo,Consolas,monospace;background:#0f1418;color:#b6f5c8;border-radius:8px;padding:8px 10px;height:150px;overflow:hidden;font-size:.85rem;line-height:1.35;white-space:pre}
+.hold{user-select:none;-webkit-user-select:none;touch-action:none;font-weight:700;padding:12px 20px;border-radius:999px;border:2px solid var(--accent);background:var(--surface);color:var(--accent)}
+.hold.down{background:var(--accent);color:var(--accent-ink)}
+.cover{position:relative}
+.cover .veil{position:absolute;inset:0;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;font-weight:600;color:var(--muted);border:1px dashed var(--border)}
+.faults{display:grid;gap:4px}
+.faults label{display:flex;gap:8px;align-items:flex-start;padding:5px 8px;border-radius:6px;font-size:.93rem}
+.faults label:hover{background:var(--surface2)}
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding:10px 12px 10px 48px;border:1px solid var(--border);border-radius:8px;margin:0 0 22px;background:var(--surface)}
+.steps>li::before{content:counter(s);position:absolute;left:12px;top:10px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem}
+.steps>li:not(:last-child)::after{content:"↓";position:absolute;left:50%;bottom:-21px;color:var(--muted)}
+.codeann li{margin:4px 0}
+.ln{display:inline-block;min-width:1.6em;color:var(--muted);user-select:none}
+.bb-strip{cursor:pointer}
+.bb-strip:focus{outline:none}
+.bb-strip .clip{fill:var(--accent);opacity:0}
+.bb-strip.on .clip{opacity:.28}
+.bb-strip:focus-visible .clip{opacity:.18}
+.bb-strip.on .hole{fill:var(--accent)}
+.hole{fill:#5c5f63}
+.bbboard{fill:var(--surface2);stroke:var(--border)}
+.rubric label{display:flex;gap:8px;align-items:flex-start;margin:6px 0}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.78rem;background:var(--surface2);border:1px solid var(--border)}
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}
+  main{padding:16px 16px 70px}
+  .split{grid-template-columns:minmax(0,1fr)}
+  h1{font-size:1.55rem}
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
+@media print{.toc,.pager{display:none}.chapter{display:block!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="toc" aria-label="Chapter map">
+  <details id="tocd" open>
+    <summary>⚡ ESP32 Board Basics <span class="pill">Module 1</span></summary>
+    <p style="font-size:.82rem;color:var(--muted);margin:6px 0 0">Recommended order: top to bottom. You can jump anywhere; nothing is locked.</p>
+    <ol id="toclist"></ol>
+    <div class="progress" aria-live="polite">
+      <div>Chapters visited: <strong id="pv">0</strong></div>
+      <div class="bar"><i id="pvb"></i></div>
+      <div>Exercises answered correctly: <strong id="pe">0</strong></div>
+      <div class="bar ex"><i id="peb"></i></div>
+      <div style="font-size:.76rem">Opening a chapter is not mastery — only solved exercises and your final self-check show what you can do.</div>
+      <div class="tool-row">
+        <button class="small-btn" id="themebtn" type="button">Theme: auto</button>
+      </div>
+    </div>
+  </details>
+</nav>
+
+<main id="main">
+
+<!-- ============ CHAPTER 0 ============ -->
+<section class="chapter" data-title="Start here" data-min="3">
+<p class="kicker">Chapter 0 · Start here</p>
+<h1>From “what are all these pins?” to wiring — and explaining — a button and an LED</h1>
+<p class="lead">By the end of this module you will build the circuit below on a real ESP32 board, and you'll be able to say why every wire is where it is — and what would go wrong if it weren't.</p>
+
+<figure class="fig" id="previewfig">
+  <div id="previewsvg"></div>
+  <div class="controls">
+    <button class="hold" id="previewhold" type="button" aria-label="Hold to press the button">Hold to press</button>
+    <span class="caption" id="previewtxt">Button released → GPIO18 reads 1 → code sets GPIO23 LOW → LED off.</span>
+  </div>
+  <figcaption>The destination: a button on GPIO18, an LED on GPIO23. Press and hold the button above. (Diagram is a simplified wiring diagram; you'll learn every symbol along the way.)</figcaption>
+</figure>
+
+<h2>What you'll be able to do</h2>
+<ol class="outcomes">
+  <li><strong>Name the board's main parts</strong> (USB port, USB-to-serial chip, regulator, module, EN/BOOT buttons, headers) and explain what each does. <span class="pill">Ch 2</span></li>
+  <li><strong>Sort pins into categories</strong> — power, ground, general GPIO, input-only, boot-sensitive, serial, flash-reserved — and choose a suitable pin for a job. <span class="pill">Ch 3</span></li>
+  <li><strong>Wire an LED output and justify it:</strong> polarity, the resistor and its value, and the return path to ground. <span class="pill">Ch 1, 5</span></li>
+  <li><strong>Wire a button input and justify it:</strong> pull-up or pull-down, “pressed reads 0”, and why an unconnected input misbehaves. <span class="pill">Ch 6</span></li>
+  <li><strong>Predict and diagnose:</strong> say what a given wiring or code mistake will look like, and trace an unexpected symptom back to its cause. <span class="pill">Ch 7, 8, 9</span></li>
+</ol>
+
+<h2>Which board this lesson assumes</h2>
+<div class="warnbox">
+<p><strong>Assumed board: Espressif ESP32-DevKitC V4 with an ESP32-WROOM-32E module</strong> (38 pins, two rows of 19). Pin numbers, layouts and boot rules below are checked against Espressif's DevKitC user guide and the ESP32 datasheet.</p>
+<p>Many shops sell look-alikes (“ESP32 DevKit V1”, 30-pin boards, NodeMCU-32S…). The <em>principles</em> in this lesson apply to all of them; the <em>pin positions</em> may not. Before wiring, check:</p>
+<ol>
+  <li><strong>The chip family</strong> printed on the metal shield. This lesson covers the original <strong>ESP32</strong> (WROOM-32, -32D, -32E, -32UE). <strong>ESP32-S2, -S3, -C3, -C6</strong> boards have different pin numbers and different boot pins — don't reuse the numbers here.</li>
+  <li><strong>The labels printed next to your pins.</strong> Trust the printed label (e.g. “IO23”, “D23” or “G23”) over any picture, including this one.</li>
+  <li><strong>Which module you have:</strong> on WROVER modules GPIO16/17 are reserved; on WROOM they're free.</li>
+  <li><strong>Whether there's a user LED.</strong> The DevKitC has only a power LED; many clones add a blue LED on GPIO2.</li>
+</ol>
+</div>
+
+<h2>What you need</h2>
+<ul>
+  <li>ESP32 DevKitC (or compatible) and a USB cable <strong>that carries data</strong> (some cables only charge)</li>
+  <li>Solderless breadboard and a few male–male jumper wires</li>
+  <li>1 LED (red is easiest), 1 resistor of 220 Ω or 330 Ω, 1 push button (the common 6 mm, 4-leg type)</li>
+  <li>Optional: a 10 kΩ resistor and a multimeter</li>
+</ul>
+
+<h2>Roadmap</h2>
+<div class="tablewrap"><table>
+<tr><th>This module (fully taught here)</th><th>Later modules (not covered)</th></tr>
+<tr><td>Board anatomy · pin categories · voltage, current, resistance, ground · breadboard · LED output · button input with pull-ups · reading symptoms and debugging</td>
+<td>2: Dimming with PWM, debouncing and interrupts<br>3: Analog input (ADC) — potentiometers, light sensors<br>4: Driving bigger loads (transistors, relays, motors) and 5 V parts<br>5: Sensors over I²C/SPI · 6: Wi-Fi and batteries</td></tr>
+</table></div>
+<p>Each chapter follows roughly the same rhythm: a concrete question → a picture → a worked example → your prediction → an experiment → the explanation → a short task. Budget about 55 minutes total.</p>
+<details class="deep"><summary>Software setup (if you'll try this on real hardware)</summary>
+<p>This lesson uses the Arduino language because it's the shortest path to a blinking LED. Rough steps (check Espressif's Arduino-ESP32 “Installing” page for the current procedure):</p>
+<ol><li>Install Arduino IDE 2.</li><li>In <em>Boards Manager</em>, install “esp32 by Espressif Systems”.</li><li>Select the board “ESP32 Dev Module” and the serial port that appears when you plug the board in.</li><li>Upload. If it hangs at “Connecting…”, hold the <strong>BOOT</strong> button until uploading starts.</li></ol>
+<p>If no port appears, see chapter 8, case F.</p>
+</details>
+</section>
+
+<!-- ============ CHAPTER 1 ============ -->
+<section class="chapter" data-title="Just enough electricity" data-min="6">
+<p class="kicker">Chapter 1 · Prerequisites</p>
+<h1>Just enough electricity</h1>
+<p class="lead"><strong>Concrete question:</strong> an LED has two legs. Why can't you just touch one leg to a battery and have it light?</p>
+
+<figure class="fig">
+  <div>
+    <div id="loopwrap" style="max-width:560px;margin:0 auto"><div id="loopsvg"></div></div>
+    <div>
+      <div class="controls">
+        <button class="btn" id="loopSwitch" type="button" aria-pressed="false">Close the switch</button>
+        <button class="btn" id="loopCut" type="button" aria-pressed="false">Cut the return wire</button>
+        <button class="btn" id="loopPause" type="button" aria-pressed="false">Pause animation</button>
+        <button class="btn" id="loopReset" type="button">Reset</button>
+      </div>
+      <p class="status mid" id="loopStatus" aria-live="polite"></p>
+      <div class="xcard card">
+        <dl>
+          <dt>Change</dt><dd>The switch, and whether the bottom (return) wire is intact.</dd>
+          <dt>Observe</dt><dd>Whether current flows (moving dots) and the LED lights.</dd>
+          <dt>Constant</dt><dd>Battery, resistor, LED.</dd>
+          <dt>Why</dt><dd>Current only flows around a <em>complete loop</em> from the source's + side back to its − side.</dd>
+          <dt>Limits</dt><dd>Qualitative picture; dot speed means nothing physical.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <figcaption>A battery, a switch, a resistor and an LED in one loop. Dots show conventional current flow from + to −. Text version: the loop goes battery + → switch → resistor → LED → return wire → battery −. Opening the switch <em>or</em> cutting the return wire stops current everywhere in the loop.</figcaption>
+</figure>
+
+<h2>Three quantities, one picture</h2>
+<p><strong>Voltage (V, volts)</strong> is the electrical “push” between <em>two points</em>. A battery labelled 3 V keeps its + side 3 V above its − side. Voltage is always <em>between</em> two places — a single point doesn't “have” a voltage until you say “compared to what”.</p>
+<p><strong>Current (I, amperes, A)</strong> is how much charge flows past a point per second. Small circuits use <strong>milliamperes</strong>: 1 mA = 0.001 A. An indicator LED needs a few mA.</p>
+<p><strong>Resistance (R, ohms, Ω)</strong> is how strongly something opposes current. A <strong>resistor</strong> is a part made to have a specific resistance, e.g. 220 Ω.</p>
+<p><strong>Circuit</strong> = a closed loop. Current leaves the source's + side, passes through the parts, and returns to the − side. Break the loop anywhere and current stops <em>everywhere</em>.</p>
+<p><strong>Ground (GND)</strong> is the point we agree to call 0 V — the shared reference and return path. On the ESP32 board, every pin labelled GND is connected together and to the − side of the supply. When we later say “GPIO23 is at 3.3 V”, we mean “3.3 V above GND”.</p>
+
+<h3>An analogy — and where it breaks</h3>
+<div class="tablewrap"><table>
+<tr><th>Water system</th><th>Electric circuit</th></tr>
+<tr><td>Pump creating a pressure difference</td><td>Voltage source (battery, USB, a GPIO pin set HIGH)</td></tr>
+<tr><td>Flow rate (litres per second)</td><td>Current (amperes)</td></tr>
+<tr><td>Narrow section of pipe</td><td>Resistor</td></tr>
+<tr><td>One-way valve</td><td>Diode — an LED is a diode that emits light</td></tr>
+<tr><td>Pipe back to the pump's inlet</td><td>Return path to GND</td></tr>
+<tr><td>Closed valve</td><td>Open switch</td></tr>
+</table></div>
+<div class="note"><strong>Where the analogy stops being accurate:</strong> a broken water pipe spills; a broken wire doesn't leak electricity — the current simply stops. Pipes must fill up before water flows; wires are always “full”, so current starts everywhere in the loop at once. And “ground” on your board is not the earth outside — it is just the board's own 0 V reference. Use the analogy for intuition, but reason with the loop rule.</div>
+
+<div class="quiz ex" data-ex="c1-break">
+<p class="qlabel">Predict</p>
+<p class="qtext">In a single loop, a switch opens between the resistor and the LED. Where does the current stop?</p>
+<div class="opts">
+<button class="opt" type="button">Only after the switch — the battery side still carries current.</button>
+<div class="why">The battery side is part of the same loop. Current can't pile up at the break — the charges have nowhere to go — so flow stops before the switch too. Misconception: thinking of current as water pouring into a dead-end pipe.</div>
+<button class="opt" type="button" data-correct>Everywhere in the loop.</button>
+<div class="why">A loop is all-or-nothing: current needs an unbroken path from + back to −. One gap anywhere stops it everywhere.</div>
+<button class="opt" type="button">It slows down gradually as it reaches the gap.</button>
+<div class="why">There's no gradual slowing; the whole loop stops at once. Try it with the switch in the figure.</div>
+</div>
+<details class="hint"><summary>Hint</summary><p>Can charge leave the battery's + side if it has no way to return to the − side?</p></details>
+</div>
+
+<div class="quiz ex" data-ex="c1-oneleg">
+<p class="qlabel">Apply</p>
+<p class="qtext">You hold an LED's long leg on a battery's + terminal. The short leg touches nothing. What happens?</p>
+<div class="opts">
+<button class="opt" type="button">The LED glows faintly.</button>
+<div class="why">There's no loop, so no current — not even a little. Faint glow would need some current to flow and return.</div>
+<button class="opt" type="button" data-correct>Nothing — there is no path back to the battery's − side.</button>
+<div class="why">Exactly. This is why every LED you wire to the ESP32 needs a second connection back to GND.</div>
+<button class="opt" type="button">It lights fully; the + side provides the energy.</button>
+<div class="why">Voltage is a difference between two points. With one leg unconnected, the LED doesn't have the battery's voltage <em>across</em> it.</div>
+</div>
+</div>
+<details class="deep"><summary>Electrons actually move the other way</summary>
+<p>By an 18th-century convention, current is drawn flowing from + to − (“conventional current”). In metal wires, the charge carriers are electrons, which drift from − to +. For every calculation in this lesson the convention works perfectly, so we use it throughout.</p></details>
+</section>
+
+<!-- ============ CHAPTER 2 ============ -->
+<section class="chapter" data-title="Meet the board" data-min="5">
+<p class="kicker">Chapter 2 · Physical parts</p>
+<h1>Meet the board</h1>
+<p class="lead"><strong>Concrete question:</strong> the ESP32 chip runs at 3.3 V, but your USB port supplies 5 V and talks “USB”. What's on the board that bridges the gap?</p>
+<p>Select a part (click, tap, or Tab + Enter). Then turn on the <em>conceptual</em> overlays to see how power and data travel between parts.</p>
+<figure class="fig">
+  <div class="controls">
+    <button class="btn" id="ovlPower" type="button" aria-pressed="false">Show power path</button>
+    <button class="btn" id="ovlData" type="button" aria-pressed="false">Show data path</button>
+    <button class="btn" id="partsReset" type="button">Reset</button>
+  </div>
+  <div class="split">
+    <div id="boardParts"></div>
+    <div class="infopanel card" id="partInfo" aria-live="polite"></div>
+  </div>
+  <figcaption>ESP32-DevKitC V4, simplified top view (USB at the bottom, antenna at the top). Dashed overlays are a <strong>conceptual layer</strong>: they show which parts feed which, not the real copper traces.</figcaption>
+</figure>
+
+<h2>Inside the module: an exploded view</h2>
+<p>The big silver rectangle isn't the chip itself. It's a <strong>module</strong>: a small circuit board with the ESP32 chip and its helpers under a metal shield.</p>
+<figure class="fig">
+  <div class="controls"><button class="btn" id="explodeBtn" type="button" aria-pressed="false">Lift the shield (exploded view)</button></div>
+  <div id="explodeSvg"></div>
+  <figcaption>Text version: under the shield sit the ESP32 chip, a flash memory chip that stores your program, and a 40 MHz crystal that sets the chip's clock. The chip talks to the flash over six wires — GPIO6–11 — which is why those six pins on the headers are off-limits for you.</figcaption>
+</figure>
+
+<div class="think">
+<p class="qlabel">Why does this step work?</p>
+<p class="qtext">The USB connector delivers 5 V, yet the datasheet's absolute maximum for the ESP32 supply is 3.6 V. Why doesn't plugging in USB destroy the chip?</p>
+<textarea aria-label="Your answer (not graded)" data-save="t2-ldo"></textarea>
+<button class="btn reveal" type="button">Reveal model answer</button>
+<div class="answer" hidden><p>The 5 V never reaches the chip directly. The voltage regulator (LDO) turns it into a steady 3.3 V, and only that 3.3 V supplies the module and the 3V3 pin. That's also why the 5V pin must never touch a GPIO: it bypasses the regulator.</p>
+<p><strong>Self-check:</strong> did you mention (1) the regulator, (2) that it lowers 5 V to 3.3 V, (3) that the chip only sees the regulated side?</p></div>
+</div>
+
+<div class="quiz ex" data-ex="c2-port">
+<p class="qlabel">Diagnose</p>
+<p class="qtext">You plug in the board. The red power LED lights, but your computer shows no new serial port. Which part is the best first suspect?</p>
+<div class="opts">
+<button class="opt" type="button">The voltage regulator</button>
+<div class="why">The power LED is lit, so 5 V is arriving; the regulator isn't the first suspect. Power and data are different paths — look at the data path overlay.</div>
+<button class="opt" type="button" data-correct>The data path: the cable (charge-only?) or the USB-to-UART bridge's driver</button>
+<div class="why">Right. The power LED proves the power path works. A missing port points at the data path: cables without data wires, or a missing driver for the bridge chip (CP210x and CH340 are common).</div>
+<button class="opt" type="button">The ESP32 module is broken</button>
+<div class="why">Possible, but unlikely first. The serial port is created by the USB-to-UART bridge, before the ESP32 is even involved.</div>
+</div>
+<details class="hint"><summary>Hint</summary><p>Turn on both overlays. Which path is proven to work by the lit LED, and which path creates the “port”?</p></details>
+</div>
+</section>
+
+<!-- ============ CHAPTER 3 ============ -->
+<section class="chapter" data-title="Pins and their categories" data-min="6">
+<p class="kicker">Chapter 3 · Pin categories</p>
+<h1>Pins and their categories</h1>
+<p class="lead"><strong>Concrete question:</strong> the board has 38 pins. Which ones can you safely use for an LED and a button — and why are some off-limits?</p>
+
+<h2>First, two words</h2>
+<p><strong>GPIO</strong> = <em>general-purpose input/output</em>: a pin your program controls. As an <strong>output</strong>, the pin is like a switch that connects itself either to 3.3 V (<code>HIGH</code>) or to GND (<code>LOW</code>). As an <strong>input</strong>, the pin <em>measures</em> the voltage someone else puts on it and reports <code>HIGH</code> or <code>LOW</code>.</p>
+<p><strong>GPIO number vs position:</strong> in code, <code>23</code> means <em>GPIO23</em> — the pin printed “IO23” — <strong>not</strong> the 23rd pin. On the DevKitC, IO23 sits second from the top on the right header.</p>
+<div class="dangerbox"><strong>Rule that never changes:</strong> ESP32 pins work at <strong>3.3 V</strong>. The datasheet's absolute maximum is 3.6 V. Never connect 5 V (including the 5V pin) to a GPIO.</div>
+
+<figure class="fig">
+  <fieldset style="border:0;padding:0;margin:0"><legend style="font-size:.85rem;color:var(--muted)">Show categories (uncheck to dim):</legend>
+  <div class="legend" id="pinFilters"></div></fieldset>
+  <div class="split">
+    <div id="boardPins"></div>
+    <div class="infopanel card" id="pinInfo" aria-live="polite"></div>
+  </div>
+  <figcaption>DevKitC V4 header pins in physical order (left header J2, right header J3). Each colour also has a written category in the panel and the filter list. Select any pin for details.</figcaption>
+</figure>
+
+<h2>The categories in one table</h2>
+<div class="tablewrap"><table>
+<tr><th>Category</th><th>Pins on DevKitC</th><th>What it means for you</th></tr>
+<tr><td><span class="sw cat-gpio" style="background:var(--c-gpio)"></span> General GPIO</td><td>4, 13, 14, 16–19, 21–23, 25–27, 32, 33</td><td><span class="tag conv">first choice</span>Input or output, internal pull-up/down available.</td></tr>
+<tr><td><span class="sw" style="background:var(--c-in)"></span> Input-only</td><td>34, 35, 36 (VP), 39 (VN)</td><td>Can only read. No output driver, <strong>no internal pull-up/down</strong>.</td></tr>
+<tr><td><span class="sw" style="background:var(--c-strap)"></span> Boot-sensitive (strapping)</td><td>0, 2, 5, 12, 15</td><td>Read once at power-up to decide how to boot. Usable later, but a circuit that forces the wrong level at startup can stop the board from booting. Avoid while learning.</td></tr>
+<tr><td><span class="sw" style="background:var(--c-serial)"></span> Serial (UART0)</td><td>1 (TX), 3 (RX)</td><td>Wired to the USB bridge for uploads and Serial Monitor. Avoid.</td></tr>
+<tr><td><span class="sw" style="background:var(--c-flash)"></span> Flash-reserved</td><td>6–11 (CLK, D0–D3, CMD)</td><td><span class="tag req">never use</span>Connected to the module's flash; touching them crashes the program.</td></tr>
+<tr><td><span class="sw" style="background:var(--c-power)"></span> Power</td><td>3V3, 5V</td><td>Supply pins, not signals. Never connect directly to GND.</td></tr>
+<tr><td><span class="sw" style="background:var(--c-gnd)"></span> Ground</td><td>GND ×3</td><td>0 V reference; all connected together.</td></tr>
+<tr><td><span class="sw" style="background:var(--c-en)"></span> EN</td><td>EN</td><td>Reset line. Pulling it to GND holds the chip in reset.</td></tr>
+</table></div>
+
+<div class="quiz ex" data-ex="c3-flash">
+<p class="qlabel">Recall (from chapter 2)</p>
+<p class="qtext">Why must GPIO6–11 stay unconnected?</p>
+<div class="opts">
+<button class="opt" type="button">They're 5 V pins.</button>
+<div class="why">No ESP32 GPIO is a 5 V pin. Think about what you saw under the shield.</div>
+<button class="opt" type="button" data-correct>The chip uses them to read its program from the flash memory inside the module.</button>
+<div class="why">Yes. The program lives in flash and is fetched over those six wires while it runs. Anything you attach disturbs that traffic.</div>
+<button class="opt" type="button">They're input-only.</button>
+<div class="why">That's GPIO34–39 — a different restriction.</div>
+</div>
+</div>
+
+<div class="task ex" data-ex="c3-picker" id="pinPicker">
+<p class="qlabel">Choose a pin</p>
+<p class="qtext">Pick a suitable pin for each job. Feedback explains the category rule behind your choice.</p>
+<div id="pickerRows"></div>
+<p class="fb" id="pickerSummary"></p>
+</div>
+</section>
+
+<!-- ============ CHAPTER 4 ============ -->
+<section class="chapter" data-title="The breadboard" data-min="3">
+<p class="kicker">Chapter 4 · Making connections</p>
+<h1>The breadboard</h1>
+<p class="lead"><strong>Concrete question:</strong> a breadboard has hundreds of holes. Which holes are connected to each other, out of sight?</p>
+<p>Under the plastic are metal clips. Each clip joins a small group of holes into one connection point. Select a group of holes to reveal its clip.</p>
+<figure class="fig">
+  <div id="bbsvg"></div>
+  <p class="caption" id="bbinfo" aria-live="polite">Select a hole group.</p>
+  <figcaption>Text version: in the middle area, each <em>column</em> of 5 holes (a–e) is one connection; the 5 holes f–j below the centre gap are a separate one. The long rails along the top and bottom connect along their whole length (on some long boards the rails are split in the middle — check with a multimeter or a test LED).</figcaption>
+</figure>
+<ul>
+  <li><strong>Centre gap:</strong> separates the a–e side from the f–j side. Chips and buttons straddle it so their pins don't get shorted together.</li>
+  <li><strong>Rails:</strong> by convention, red/+ for the supply (here 3.3 V) and blue/− for GND. The colours are a <span class="tag conv">convention</span>, not a connection — the board doesn't care which rail you use.</li>
+  <li><strong>Wide boards:</strong> many ESP32 boards are so wide that, once plugged in, they leave only one free row of holes on one side (or none). Common fixes: two breadboards side by side, or connecting to the pins with female jumper wires.</li>
+</ul>
+<div class="quiz ex" data-ex="c4-pairs">
+<p class="qlabel">Predict, then check in the figure</p>
+<p class="qtext">Which pair of holes is connected?</p>
+<div class="opts">
+<button class="opt" type="button">c5 and c6</button>
+<div class="why">Neighbouring columns are different clips. Same letter does not mean connected.</div>
+<button class="opt" type="button">e5 and f5</button>
+<div class="why">The centre gap separates e from f. That gap is exactly what makes it safe to place a button or chip across it.</div>
+<button class="opt" type="button" data-correct>a5 and e5</button>
+<div class="why">Same column, same side of the gap → same clip.</div>
+</div>
+</div>
+<div class="quiz ex" data-ex="c4-short">
+<p class="qlabel">Apply</p>
+<p class="qtext">You push both legs of a resistor into holes b10 and d10. What does the resistor do in the circuit?</p>
+<div class="opts">
+<button class="opt" type="button" data-correct>Nothing useful — both legs are in the same clip, so it's bypassed.</button>
+<div class="why">Right. Both ends are already connected by the clip, so no current needs to pass through the resistor. Parts must bridge <em>different</em> groups.</div>
+<button class="opt" type="button">It works normally.</button>
+<div class="why">Both legs share one clip, so the clip is a zero-resistance shortcut around the resistor.</div>
+<button class="opt" type="button">It creates a short circuit that damages the board.</button>
+<div class="why">It's bypassed, but by itself that doesn't short a power supply. It just does nothing.</div>
+</div>
+</div>
+</section>
+
+<!-- ============ CHAPTER 5 ============ -->
+<section class="chapter" data-title="Output: lighting an LED" data-min="7">
+<p class="kicker">Chapter 5 · Outputs</p>
+<h1>Output: lighting an LED</h1>
+<p class="lead"><strong>Concrete question:</strong> GPIO23 can switch itself to 3.3 V. Why not plug an LED straight between GPIO23 and GND?</p>
+
+<div class="think">
+<p class="qlabel">Recall (chapter 1)</p>
+<p class="qtext">Before reading on: what does an LED need to light, besides the LED itself?</p>
+<textarea aria-label="Your answer (not graded)" data-save="t5-recall"></textarea>
+<button class="btn reveal" type="button">Reveal</button>
+<div class="answer" hidden><p>A voltage source (here: a GPIO set HIGH) and a complete loop back to that source's 0 V side (GND). This chapter adds a third thing: something to <em>limit the current</em>.</p></div>
+</div>
+
+<h2>Meet the LED</h2>
+<figure class="fig">
+<svg viewBox="0 0 520 200" role="img" aria-labelledby="ledanatT"><title id="ledanatT">LED: physical part next to its circuit symbol</title>
+  <g transform="translate(70,26)">
+    <path d="M20 70 V30 a30 30 0 0 1 60 0 V70 Z" fill="#ff8a80" stroke="var(--text)" stroke-width="2"/>
+    <rect x="12" y="68" width="76" height="8" fill="#ff8a80" stroke="var(--text)" stroke-width="2"/>
+    <line x1="85" y1="66" x2="85" y2="78" stroke="var(--text)" stroke-width="3"/>
+    <line x1="35" y1="76" x2="35" y2="150" stroke="#888" stroke-width="4"/>
+    <line x1="65" y1="76" x2="65" y2="132" stroke="#888" stroke-width="4"/>
+    <text x="35" y="166" class="slabel" text-anchor="middle">long leg</text>
+    <text x="80" y="148" class="slabel">short leg</text>
+    <text x="96" y="74" class="smuted">flat edge</text>
+  </g>
+  <text x="105" y="12" class="slabel" text-anchor="middle" font-weight="700">The part</text>
+  <g transform="translate(300,56)">
+    <line x1="0" y1="45" x2="55" y2="45" class="sym"/>
+    <path d="M55 22 L55 68 L95 45 Z" class="ledfill"/>
+    <line x1="95" y1="22" x2="95" y2="68" class="sym"/>
+    <line x1="95" y1="45" x2="150" y2="45" class="sym"/>
+    <path d="M78 18 l12 -14 M86 4 h5 v5 M90 22 l12 -14 M98 8 h5 v5" class="sym" stroke-width="2"/>
+    <text x="10" y="80" class="slabel">anode (+)</text>
+    <text x="100" y="80" class="slabel">cathode (−)</text>
+    <text x="75" y="110" class="smuted" text-anchor="middle">current flows only in the arrow's direction →</text>
+  </g>
+  <text x="375" y="12" class="slabel" text-anchor="middle" font-weight="700">Its symbol</text>
+</svg>
+<figcaption><strong>Anode (+)</strong> = long leg; <strong>cathode (−)</strong> = short leg, on the side of the flat edge. The symbol's triangle points in the only direction current can flow. If legs were trimmed, the flat edge still marks the cathode.</figcaption>
+</figure>
+<p>An LED is a <strong>diode</strong>: a one-way valve for current. Turned the wrong way, it simply blocks (at 3.3 V that's harmless). Turned the right way, it has a nearly fixed <strong>forward voltage</strong> (V<sub>F</sub>) — the voltage it “uses up” while conducting — about 2 V for red, about 3 V for blue or white.</p>
+<p>Here's the catch: once the voltage across an LED rises past V<sub>F</sub>, its current shoots up steeply. An LED alone doesn't limit its own current. That's the resistor's job.</p>
+
+<h2>The resistor and Ohm's law</h2>
+<p>The resistor goes in the same loop (“<strong>in series</strong>”) with the LED. The supply voltage is shared along the loop: whatever the LED doesn't use, the resistor gets. For a resistor, voltage and current are tied together by <strong>Ohm's law</strong>:</p>
+<p class="card" style="text-align:center;font-size:1.15rem"><strong>V = I × R</strong> &nbsp;⇔&nbsp; <strong>I = V / R</strong> &nbsp;⇔&nbsp; <strong>R = V / I</strong></p>
+<ul>
+  <li><strong>V</strong>: the voltage across the resistor, in volts (V)</li>
+  <li><strong>I</strong>: the current through it, in amperes (A) — careful: 5 mA = 0.005 A</li>
+  <li><strong>R</strong>: its resistance, in ohms (Ω)</li>
+</ul>
+<p>For the LED circuit, the resistor's voltage is what remains after the LED: <strong>V<sub>R</sub> = V<sub>supply</sub> − V<sub>F</sub></strong>. So:</p>
+<p class="card" style="text-align:center;font-size:1.1rem"><strong>R = (V<sub>supply</sub> − V<sub>F</sub>) / I<sub>wanted</sub></strong></p>
+
+<h3>Worked example — red LED on GPIO23</h3>
+<ol>
+  <li><strong>Supply:</strong> GPIO23 HIGH ≈ 3.3 V. <em>Why:</em> that's the pin's output level.</li>
+  <li><strong>LED:</strong> red, V<sub>F</sub> ≈ 2.0 V (typical; your LED's datasheet may say 1.8–2.2 V).</li>
+  <li><strong>Target current:</strong> 5 mA = 0.005 A. <em>Why:</em> plenty for an indicator; far below what the pin can supply.</li>
+  <li><strong>Resistor voltage:</strong> 3.3 − 2.0 = 1.3 V.</li>
+  <li><strong>R</strong> = 1.3 V / 0.005 A = <strong>260 Ω</strong>.</li>
+  <li><strong>Pick a real value:</strong> resistors come in standard steps (…, 220, 270, 330, …). 220 Ω gives 1.3/220 ≈ 5.9 mA; 330 Ω gives ≈ 3.9 mA. Either is fine. Rounding <em>up</em> is the safer direction.</li>
+</ol>
+
+<h3>Experiment: the current-limiting resistor</h3>
+<figure class="fig">
+  <div id="ledcircuit"></div>
+  <div class="split" style="margin-top:8px">
+    <div>
+      <label for="ledColor">LED colour (typical V<sub>F</sub>)</label><br>
+      <select id="ledColor">
+        <option value="2.0">Red — 2.0 V</option>
+        <option value="2.1">Yellow — 2.1 V</option>
+        <option value="2.2">Green (yellow-green type) — 2.2 V</option>
+        <option value="3.0">Blue — 3.0 V</option>
+        <option value="3.0w">White — 3.0 V</option>
+      </select>
+      <p style="margin:10px 0 2px"><label for="resSlider">Resistor: <strong id="resVal">220 Ω</strong></label></p>
+      <input type="range" id="resSlider" min="0" max="10" step="1" value="4" aria-describedby="resHelp">
+      <div class="meter-scale" id="resHelp"><span>none (0 Ω)</span><span>10 kΩ</span></div>
+      <p style="margin:10px 0 2px"><label for="supplySel">Supply</label></p>
+      <select id="supplySel"><option value="3.3">GPIO set HIGH (3.3 V)</option><option value="5">5V pin (for comparison only)</option></select>
+      <div class="controls"><button class="btn" id="ledReset" type="button">Reset</button></div>
+    </div>
+    <div>
+      <div class="caption">Voltage budget around the loop</div>
+      <div class="budget" id="budget"><div class="b-r" id="bR"></div><div class="b-led" id="bL"></div></div>
+      <div class="caption" style="margin-top:10px">Current (0–30 mA)</div>
+      <div class="meter" id="imeter"><div class="needle" id="ineedle"></div></div>
+      <div class="meter-scale"><span>0</span><span>10</span><span>20</span><span>30 mA</span></div>
+      <div class="caption">Bands: grey &lt; 2 mA dim · green 2–10 mA comfortable · yellow 10–20 mA more than needed · red &gt; 20 mA too much</div>
+      <div class="readout" id="iread" aria-live="polite"></div>
+      <div class="status" id="istatus"></div>
+    </div>
+  </div>
+  <div class="xcard card">
+    <dl>
+      <dt>Change</dt><dd>Resistor value, LED colour, supply.</dd>
+      <dt>Observe</dt><dd>How the 3.3 V is split between resistor and LED, the current, and the brightness.</dd>
+      <dt>Constant</dt><dd>The LED's forward voltage (treated as fixed for each colour).</dd>
+      <dt>Why</dt><dd>The LED takes roughly V<sub>F</sub>; the resistor gets the rest; Ohm's law then sets the current.</dd>
+      <dt>Limits</dt><dd>Simplified model: real V<sub>F</sub> varies between LEDs and rises a little with current, and a real pin's output voltage sags under load. Brightness is illustrative. With no resistor, or when supply ≈ V<sub>F</sub> (blue/white at 3.3 V), the model is not reliable.</dd>
+    </dl>
+  </div>
+  <p class="caption"><strong>Suggested experiment:</strong> start at 220 Ω with red. Halve the resistance twice, then go to “none”. Then switch to blue and notice how little room 3.3 V leaves.</p>
+</figure>
+
+<div class="numcheck ex" data-ex="c5-green" data-lo="260" data-hi="290" data-traps="825:You used the whole 3.3 V. The LED takes about 2.2 V of it — only the remainder is across the resistor.|0.275:Check units: 4 mA is 0.004 A, and the result is in ohms, not kilo-ohms.|275000:Check units: 4 mA is 0.004 A (not 4 µA).|550:That's 2.2 V / 0.004 A — the LED's share, not the resistor's.">
+<p class="qlabel">Your turn (some steps done)</p>
+<p class="qtext">Green LED (V<sub>F</sub> ≈ 2.2 V) on a GPIO at 3.3 V; you want about 4 mA.</p>
+<ol><li>Resistor voltage = 3.3 V − 2.2 V = <strong>1.1 V</strong></li><li>Current = 4 mA = <strong>0.004 A</strong></li><li>R = ? (calculate, in Ω)</li></ol>
+<label class="inline">R = <input type="number" step="any" style="width:8em" aria-label="Resistance in ohms"> Ω</label>
+<button class="btn check" type="button">Check</button>
+<details class="hint"><summary>Hint</summary><p>R = V<sub>R</sub> / I with V in volts and I in amperes.</p></details>
+<p class="fb" aria-live="polite"></p>
+<div class="answer" hidden><p>R = 1.1 V / 0.004 A = 275 Ω. Nearest standard values: 270 Ω (≈ 4.1 mA) or 330 Ω (≈ 3.3 mA). Both are fine.</p></div>
+</div>
+
+<div class="quiz ex" data-ex="c5-order">
+<p class="qlabel">Misconception check</p>
+<p class="qtext">Does the resistor have to sit between the GPIO and the LED, or could it go between the LED and GND?</p>
+<div class="opts">
+<button class="opt" type="button">It must come first, so it can “slow the current down” before it reaches the LED.</button>
+<div class="why">Current isn't used up or slowed along the way. In a single loop the same current flows through every part, so position doesn't matter.</div>
+<button class="opt" type="button" data-correct>Either position works.</button>
+<div class="why">Yes. In a series loop the same current flows through every part. The resistor limits the loop's current wherever it sits. Putting it on the GPIO side is just a common habit.</div>
+<button class="opt" type="button">It must go on the GND side to protect the pin.</button>
+<div class="why">Both positions give the same current, so the pin is protected either way.</div>
+</div>
+</div>
+
+<h2>Two ways to wire an output</h2>
+<figure class="fig">
+<svg viewBox="0 0 560 190" role="img" aria-labelledby="srcSinkT"><title id="srcSinkT">Source wiring versus sink wiring of an LED</title>
+  <text x="140" y="18" class="slabel" text-anchor="middle" font-weight="700">A · Pin supplies current (active-high)</text>
+  <text x="20" y="64" class="slabel">GPIO</text>
+  <path d="M55 60 H80" class="wire w-sig"/>
+  <path d="M80 60 l5 -8 l8 16 l8 -16 l8 16 l8 -16 l8 16 l5 -8" class="sym"/>
+  <path d="M130 60 H150" class="wire w-sig"/>
+  <path d="M150 46 L150 74 L176 60 Z" class="ledfill"/><line x1="176" y1="46" x2="176" y2="74" class="sym"/>
+  <path d="M176 60 H230 V120" class="wire w-gnd"/>
+  <path d="M215 120 H245 M221 127 H239 M227 134 H233" class="sym"/>
+  <text x="250" y="132" class="slabel">GND</text>
+  <text x="20" y="168" class="smuted">HIGH → LED on · LOW → LED off</text>
+
+  <text x="420" y="18" class="slabel" text-anchor="middle" font-weight="700">B · Pin sinks current (active-low)</text>
+  <text x="300" y="64" class="slabel">3V3</text>
+  <path d="M330 60 H355" class="wire w-pwr"/>
+  <path d="M355 60 l5 -8 l8 16 l8 -16 l8 16 l8 -16 l8 16 l5 -8" class="sym"/>
+  <path d="M405 60 H425" class="wire w-sig"/>
+  <path d="M425 46 L425 74 L451 60 Z" class="ledfill"/><line x1="451" y1="46" x2="451" y2="74" class="sym"/>
+  <path d="M451 60 H500 V120" class="wire w-sig"/>
+  <text x="485" y="140" class="slabel">GPIO</text>
+  <text x="300" y="168" class="smuted">LOW → LED on · HIGH → LED off</text>
+</svg>
+<figcaption>Zig-zag = resistor (European diagrams often draw a small rectangle instead). Both wirings work. A is more intuitive; B is common on boards where an LED is “active-low”. In this lesson we use A.</figcaption>
+</figure>
+<div class="think">
+<p class="qlabel">What would change?</p>
+<p class="qtext">In wiring B, what happens when the code sets the GPIO HIGH — and why?</p>
+<textarea aria-label="Your answer (not graded)" data-save="t5-sink"></textarea>
+<button class="btn reveal" type="button">Reveal model answer</button>
+<div class="answer" hidden><p>The LED goes <strong>off</strong>. Both ends of the resistor–LED chain are now at 3.3 V, so there is no voltage <em>across</em> the chain, and without a voltage difference no current flows. LOW makes the pin end 0 V, so 3.3 V appears across the chain and it lights.</p>
+<p><strong>Self-check:</strong> did you reason with the voltage <em>difference</em> across the LED rather than “HIGH means on”?</p></div>
+</div>
+<pre><code>pinMode(23, OUTPUT);      // make GPIO23 an output (a switch to 3.3 V or GND)
+digitalWrite(23, HIGH);   // connect it to 3.3 V → current flows → LED on (wiring A)
+digitalWrite(23, LOW);    // connect it to GND  → no voltage across LED → off</code></pre>
+<details class="deep"><summary>How much current can a pin deliver?</summary>
+<p>The ESP32 datasheet lists four output drive-strength settings of about 5, 10, 20 and 40 mA; the default is setting 2 (~20 mA). It also notes that the per-pin source current drops (from around 40 toward 29 mA at maximum strength) as more pins source current at once. Those are capability figures, not a target. For indicator LEDs, aim for a few mA. Larger loads (motors, relays, LED strips) need a transistor — that's module 4.</p></details>
+</section>
+
+<!-- ============ CHAPTER 6 ============ -->
+<section class="chapter" data-title="Input: reading a button" data-min="7">
+<p class="kicker">Chapter 6 · Inputs</p>
+<h1>Input: reading a button</h1>
+<p class="lead"><strong>Concrete question:</strong> a button is just two pieces of metal that touch when pressed. It produces no voltage. So how does the ESP32 “see” a press?</p>
+
+<h2>What an input pin actually does</h2>
+<p>An input pin <em>measures voltage</em> (relative to GND) and turns it into a 0 or a 1. From the ESP32 datasheet, at 3.3 V:</p>
+<ul>
+  <li>at least 0.75 × 3.3 V ≈ <strong>2.5 V</strong> → reads <code>HIGH</code> (1)</li>
+  <li>at most 0.25 × 3.3 V ≈ <strong>0.8 V</strong> → reads <code>LOW</code> (0)</li>
+  <li>in between → <strong>not guaranteed</strong>; it might read either</li>
+</ul>
+<p>The input itself draws almost no current, so it barely affects what it measures. That's useful, but it has a dark side: a pin connected to <em>nothing</em> has no defined voltage. It picks up stray electric fields from your hand, nearby wires and mains wiring, so it reads at random. This is called a <strong>floating</strong> input.</p>
+<p>The fix is a <strong>pull resistor</strong>: a resistor that gently holds the pin at a known level when nothing else drives it. The button then overrides it when pressed.</p>
+<ul>
+  <li><strong>Pull-up:</strong> resistor from pin to 3.3 V; button from pin to GND. Released → reads 1. Pressed → reads 0.</li>
+  <li><strong>Pull-down:</strong> resistor from pin to GND; button from pin to 3.3 V. Released → 0. Pressed → 1.</li>
+</ul>
+<p>The ESP32 has these resistors built in (about 45 kΩ per the datasheet). You switch them on in code: <code>pinMode(18, INPUT_PULLUP)</code> or <code>INPUT_PULLDOWN</code>. Plain <code>INPUT</code> means “no pull resistor”.</p>
+
+<h3>Experiment: the input lab</h3>
+<figure class="fig">
+  <div class="faults" role="radiogroup" aria-label="Input configuration" id="inModes"></div>
+  <div style="margin-top:8px">
+    <div id="insvg" style="max-width:600px;margin:0 auto"></div>
+    <div>
+      <div class="controls">
+        <button class="hold" id="inHold" type="button" aria-label="Hold to press the button">Hold to press</button>
+        <label class="inline"><input type="checkbox" id="inLatch"> keep pressed</label>
+      </div>
+      <div class="controls">
+        <button class="btn" id="inPause" type="button" aria-pressed="false">Pause chart</button>
+        <button class="btn" id="inReset" type="button">Reset</button>
+      </div>
+      <div class="readout" id="inread" aria-live="polite"></div>
+    </div>
+  </div>
+  <div id="inchart"></div>
+  <div class="status" id="inexplain"></div>
+  <div class="xcard card">
+    <dl>
+      <dt>Change</dt><dd>The configuration (pull resistor and where the button connects) and the button state.</dd>
+      <dt>Observe</dt><dd>The pin voltage (top chart, with the grey “not guaranteed” band) and what <code>digitalRead()</code> returns (bottom chart).</dd>
+      <dt>Constant</dt><dd>Same pin (GPIO18), same 3.3 V supply.</dd>
+      <dt>Why</dt><dd>Without a pull resistor nothing defines the voltage while released. With one, the pin rests at a known level and the button overrides it.</dd>
+      <dt>Limits</dt><dd>The floating trace is <em>illustrative</em> — real floating behaviour depends on your surroundings and can even look stable for a while, which makes it treacherous. Button bounce is ignored here (see below).</dd>
+    </dl>
+  </div>
+  <p class="caption"><strong>Suggested experiment:</strong> start with “no pull resistor”, watch without pressing. Then switch to the pull-up and press. Finally try the plain-wire version and press.</p>
+</figure>
+
+<div class="think">
+<p class="qlabel">What if we removed this part?</p>
+<p class="qtext">The pull-up connects the pin to 3.3 V. Pressing the button connects the same pin to GND. Why isn't that a short circuit — and what changes if the pull-up resistor is replaced by a plain wire?</p>
+<textarea aria-label="Your answer (not graded)" data-save="t6-short"></textarea>
+<button class="btn reveal" type="button">Reveal model answer</button>
+<div class="answer" hidden><p>With the button pressed, the loop is 3.3 V → 45 kΩ → pin → button → GND. The resistor limits the current to I = 3.3 V / 45 000 Ω ≈ 0.073 mA (73 µA) — tiny and harmless. Almost all 3.3 V sits across the resistor, so the pin is near 0 V and reads LOW.</p>
+<p>With a plain wire (≈ 0 Ω) instead, pressing connects 3.3 V straight to GND: a <strong>short circuit</strong>. Current is limited only by the regulator; the 3.3 V supply collapses, and the board may reset or the regulator may overheat.</p>
+<p><strong>Self-check:</strong> did you (1) use Ohm's law on the resistor, (2) say where the voltage drops, (3) name the short?</p></div>
+</div>
+
+<div class="quiz ex" data-ex="c6-activelow">
+<p class="qlabel">Interpret</p>
+<p class="qtext">With <code>INPUT_PULLUP</code> and the button to GND, your Serial Monitor shows <code>0</code> while you press and <code>1</code> otherwise. Bug?</p>
+<div class="opts">
+<button class="opt" type="button">Yes — the button must be wired backwards.</button>
+<div class="why">Buttons have no polarity. This is the expected behaviour of a pull-up circuit.</div>
+<button class="opt" type="button" data-correct>No — that's “active-low”: pressing pulls the pin to GND.</button>
+<div class="why">Correct. Released, the pull-up holds the pin HIGH; pressed, the button connects it to GND. Code handles this with <code>if (digitalRead(18) == LOW)</code>.</div>
+<button class="opt" type="button">Yes — the internal pull-up is broken.</button>
+<div class="why">A broken pull-up would give a floating, random reading while released, not a clean 1.</div>
+</div>
+</div>
+
+<div class="quiz ex" data-ex="c6-gpio34">
+<p class="qlabel">Recall (chapter 3)</p>
+<p class="qtext">You move the button to GPIO34 and keep <code>INPUT_PULLUP</code>. What do you expect while the button is released?</p>
+<div class="opts">
+<button class="opt" type="button">A clean 1, same as before.</button>
+<div class="why">That would need a pull-up. GPIO34–39 have no internal pull resistors, so the setting has no effect.</div>
+<button class="opt" type="button" data-correct>Random readings — GPIO34 has no internal pull-up, so the pin floats.</button>
+<div class="why">Right. Input-only pins lack internal pulls. Add an external resistor (e.g. 10 kΩ from GPIO34 to 3V3), or use a general GPIO.</div>
+<button class="opt" type="button">Nothing — the pin can't be read at all.</button>
+<div class="why">GPIO34 is input-<em>only</em>: reading is exactly what it can do. What it lacks is an output driver and internal pull resistors.</div>
+</div>
+</div>
+
+<h2>The 4-leg button trap</h2>
+<figure class="fig">
+<svg viewBox="0 0 560 200" role="img" aria-labelledby="btnT"><title id="btnT">Four-leg push button placed correctly versus rotated</title>
+  <defs><pattern id="bbgrid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="2.5" fill="#888"/></pattern></defs>
+  <g>
+    <text x="135" y="16" class="slabel" text-anchor="middle" font-weight="700">✓ Across the gap</text>
+    <rect x="30" y="28" width="210" height="150" class="bbboard"/>
+    <rect x="30" y="96" width="210" height="14" fill="var(--bg)"/>
+    <rect x="90" y="58" width="80" height="80" rx="6" fill="#444"/><circle cx="130" cy="98" r="22" fill="#222"/>
+    <circle cx="95" cy="62" r="5" fill="#ccc"/><circle cx="165" cy="62" r="5" fill="#ccc"/><circle cx="95" cy="134" r="5" fill="#ccc"/><circle cx="165" cy="134" r="5" fill="#ccc"/>
+    <path d="M95 62 H165 M95 134 H165" stroke="var(--c-in)" stroke-width="3" stroke-dasharray="5 4"/>
+    <text x="135" y="194" class="smuted" text-anchor="middle">legs joined inside run left↔right</text>
+    <text x="95" y="160" class="smuted" text-anchor="middle">col A</text><text x="165" y="160" class="smuted" text-anchor="middle">col B</text>
+  </g>
+  <g transform="translate(290,0)">
+    <text x="135" y="16" class="slabel" text-anchor="middle" font-weight="700">✗ Rotated 90°</text>
+    <rect x="30" y="28" width="210" height="150" class="bbboard"/>
+    <rect x="30" y="96" width="210" height="14" fill="var(--bg)"/>
+    <rect x="90" y="58" width="80" height="80" rx="6" fill="#444"/><circle cx="130" cy="98" r="22" fill="#222"/>
+    <circle cx="95" cy="62" r="5" fill="#ccc"/><circle cx="165" cy="62" r="5" fill="#ccc"/><circle cx="95" cy="134" r="5" fill="#ccc"/><circle cx="165" cy="134" r="5" fill="#ccc"/>
+    <path d="M95 62 V134 M165 62 V134" stroke="var(--bad)" stroke-width="3" stroke-dasharray="5 4"/>
+    <text x="135" y="194" class="smuted" text-anchor="middle">joined legs now span the gap → always “pressed”</text>
+  </g>
+</svg>
+<figcaption>Inside a 4-leg button, the legs are permanently joined in pairs; pressing connects one pair to the other. Placed correctly, the button bridges the centre gap only when pressed. Rotated, a permanently joined pair already bridges it, so the circuit behaves as if the button is always pressed. If unsure, use two <em>diagonally opposite</em> legs — they are always on different sides of the switch.</figcaption>
+</figure>
+
+<details class="deep"><summary>Button bounce</summary>
+<p>When metal contacts close, they bounce for a few milliseconds, so one press can look like several quick presses to a fast program. For “LED on while held” this doesn't matter. For counting presses or toggling, you ignore changes for ~20–50 ms after the first one (“debouncing”). That's module 2.</p>
+<svg viewBox="0 0 400 80" role="img" aria-label="Illustrative bounce: the signal flips several times before settling low"><path d="M10 15 H120 V65 H128 V15 H134 V65 H142 V15 H146 V65 H390" fill="none" stroke="var(--accent)" stroke-width="2.5"/><text x="10" y="78" class="smuted">released (1)</text><text x="210" y="58" class="smuted">pressed (0) — after a few ms of bounce (illustrative)</text></svg>
+</details>
+</section>
+
+<!-- ============ CHAPTER 7 ============ -->
+<section class="chapter" data-title="Putting it together" data-min="7">
+<p class="kicker">Chapter 7 · The running example</p>
+<h1>Putting it together: button → LED</h1>
+<p class="lead">Now we combine the chapters. First a complete worked solution, connection by connection. Then a fault lab where you predict what each mistake looks like.</p>
+
+<div class="quiz ex" data-ex="c7-recall">
+<p class="qlabel">Recall (chapter 5)</p>
+<p class="qtext">You swap the 220 Ω resistor for 330 Ω. The red LED…</p>
+<div class="opts">
+<button class="opt" type="button">…gets brighter: more resistance, more voltage.</button>
+<div class="why">More resistance means less current for the same 1.3 V across the resistor: I = 1.3 / 330 ≈ 3.9 mA versus 5.9 mA.</div>
+<button class="opt" type="button" data-correct>…gets a bit dimmer but works fine (≈ 3.9 mA instead of ≈ 5.9 mA).</button>
+<div class="why">Right. Both values are in the comfortable range for an indicator.</div>
+<button class="opt" type="button">…goes out completely.</button>
+<div class="why">330 Ω still allows about 3.9 mA, which is clearly visible.</div>
+</div>
+</div>
+
+<h2>The worked solution</h2>
+<figure class="fig"><div id="worksvg"></div><figcaption>Wiring diagram of the working circuit. Colours follow a common habit: yellow = LED signal, green = button signal, red = 3.3 V, black/grey = GND. Wire colour doesn't change how it works — it just helps you read your own breadboard.</figcaption></figure>
+<div class="tablewrap"><table>
+<tr><th>#</th><th>Connection</th><th>Why it's there</th><th>If omitted / changed</th><th>Alternatives</th></tr>
+<tr><td>1</td><td>USB cable → board</td><td><span class="tag req">required</span>Power (5 V → regulator → 3.3 V) plus upload and Serial.</td><td>Nothing runs; charge-only cable → no port.</td><td>5 V on the 5V pin from a supply — but only one power source at a time.</td></tr>
+<tr><td>2</td><td>GPIO23 → 220 Ω resistor</td><td><span class="tag req">required</span>The pin is the switch; the resistor limits current to ≈ 6 mA.</td><td>No resistor: too much current. Input-only pin (34–39): LED never lights.</td><td>Any general GPIO; 220–470 Ω.</td></tr>
+<tr><td>3</td><td>Resistor → LED anode (long leg)</td><td><span class="tag req">required</span>An LED conducts only anode → cathode.</td><td>Reversed: never lights (harmless at 3.3 V).</td><td>Resistor on the cathode side works the same.</td></tr>
+<tr><td>4</td><td>LED cathode → GND rail</td><td><span class="tag req">required</span>Return path; closes the LED loop.</td><td>No loop → LED off.</td><td>Any GND pin.</td></tr>
+<tr><td>5</td><td>GPIO18 → button leg</td><td><span class="tag req">required</span>The input senses the voltage at this point.</td><td>Button rotated 90° → always “pressed”.</td><td>Any general GPIO.</td></tr>
+<tr><td>6</td><td>Opposite button leg → GND rail</td><td><span class="tag req">required</span>Pressing pulls the pin to 0 V.</td><td>To 3V3 with INPUT_PULLUP → reading never changes.</td><td>To 3V3 with INPUT_PULLDOWN (pressed = 1).</td></tr>
+<tr><td>7</td><td>Board GND → GND rail</td><td><span class="tag req">required</span>Makes the rail the board's 0 V; both loops return through it.</td><td>LED never lights <em>and</em> reading stuck at 1.</td><td>Wire straight to the GND pin.</td></tr>
+<tr><td>(8)</td><td>Internal pull-up (in code)</td><td><span class="tag req">required</span>An invisible connection: GPIO18 → ~45 kΩ → 3.3 V inside the chip.</td><td>Plain INPUT → floating, random readings.</td><td>External 10 kΩ from GPIO18 to 3V3.</td></tr>
+</table></div>
+<p>The red/blue rails and the rail position are <span class="tag conv">convention</span>. The GND wire colour is a convention too. The loops are not.</p>
+
+<h3>The code, line by line</h3>
+<pre><code><span class="ln">1</span>const int LED_PIN = 23;      // output: drives the LED through 220 Ω
+<span class="ln">2</span>const int BUTTON_PIN = 18;   // input: button to GND
+
+<span class="ln">3</span>void setup() {
+<span class="ln">4</span>  Serial.begin(115200);              // text channel over USB
+<span class="ln">5</span>  pinMode(LED_PIN, OUTPUT);
+<span class="ln">6</span>  pinMode(BUTTON_PIN, INPUT_PULLUP); // switch on the internal ~45 kΩ pull-up
+<span class="ln">7</span>}
+
+<span class="ln">8</span>void loop() {
+<span class="ln">9</span>  int reading = digitalRead(BUTTON_PIN);           // 1 = released, 0 = pressed
+<span class="ln">10</span>  digitalWrite(LED_PIN, reading == LOW ? HIGH : LOW); // pressed → LED on
+<span class="ln">11</span>  Serial.println(reading);                         // a probe you can watch
+<span class="ln">12</span>  delay(20);
+<span class="ln">13</span>}</code></pre>
+<ul class="codeann">
+  <li><strong>1–2</strong> Named constants: the wiring and the code must agree on these numbers. A mismatch is a classic silent bug.</li>
+  <li><strong>4, 11</strong> Serial prints are your measuring instrument: they show what the chip <em>believes</em> the input is. That splits any problem into an “input half” and an “output half”.</li>
+  <li><strong>6</strong> This line is part of the circuit. Delete it and the hardware is incomplete.</li>
+  <li><strong>10</strong> Inverts the logic because the button is active-low.</li>
+  <li><strong>12</strong> A short pause keeps Serial readable; it also hides most bounce for this use.</li>
+</ul>
+
+<h2>Fault lab: predict, then run</h2>
+<p>Pick a fault. Wiring changes show up in the diagram immediately; what you'd <em>observe</em> stays hidden until you predict it.</p>
+<figure class="fig ex" data-ex="c7-lab">
+  <div class="faults" role="radiogroup" aria-label="Choose a fault" id="faultList"></div>
+  <div id="labsvg" style="margin-top:8px"></div>
+  <div class="split">
+    <div>
+      <div id="predictBox" class="card" style="margin-top:0"></div>
+      <div class="controls">
+        <button class="hold" id="labHold" type="button" aria-label="Hold to press the button">Hold to press</button>
+        <label class="inline"><input type="checkbox" id="labLatch"> keep pressed</label>
+        <button class="btn" id="labReset" type="button">Reset lab</button>
+      </div>
+    </div>
+    <div class="cover" id="obsCover">
+      <div class="caption">Serial Monitor (GPIO18 reading)</div>
+      <div class="serial" id="serial" aria-label="Simulated serial output"></div>
+      <div class="readout" id="labled" aria-live="polite"></div>
+      <div class="veil" id="veil">Make a prediction (or skip) to reveal the observations.</div>
+    </div>
+  </div>
+  <div class="status" id="labExplain" hidden></div>
+  <pre id="labcode" style="font-size:.82rem"></pre>
+  <p class="caption">Predictions correct: <strong id="predScore">0</strong> (3 or more marks this lab as solved). The simulation is qualitative: it shows which way each mistake pushes the behaviour, not exact currents.</p>
+</figure>
+
+<div class="task ex" data-ex="c7-sink">
+<p class="qlabel">Complete the solution (partly done)</p>
+<p class="qtext">You add a second LED using wiring B from chapter 5: <strong>3V3 → 330 Ω → LED anode; LED cathode → GPIO19</strong>. It should light when the button is pressed.</p>
+<pre><code>pinMode(19, <select id="sk1" aria-label="pin mode for GPIO19"><option value="">?</option><option>INPUT</option><option>OUTPUT</option><option>INPUT_PULLUP</option></select>);
+// in loop(), when the button is pressed:
+digitalWrite(19, <select id="sk2" aria-label="value when pressed"><option value="">?</option><option>HIGH</option><option>LOW</option></select>);
+// when released:
+digitalWrite(19, <select id="sk3" aria-label="value when released"><option value="">?</option><option>HIGH</option><option>LOW</option></select>);</code></pre>
+<button class="btn check" type="button" id="skCheck">Check</button>
+<details class="hint"><summary>Hint</summary><p>The LED's anode is already at 3.3 V. For current to flow, the cathode end must be at a <em>lower</em> voltage.</p></details>
+<p class="fb" id="skFb" aria-live="polite"></p>
+</div>
+</section>
+
+<!-- ============ CHAPTER 8 ============ -->
+<section class="chapter" data-title="Troubleshooting" data-min="5">
+<p class="kicker">Chapter 8 · Diagnosis</p>
+<h1>Troubleshooting: from symptom to cause</h1>
+<p class="lead">In the fault lab, different mistakes produced the <em>same</em> symptom. Real debugging means gathering a second clue that separates the suspects. Here's a method that works for nearly every beginner circuit.</p>
+<ol class="steps">
+  <li><strong>Power.</strong> Is the power LED on? With a multimeter on DC volts: 3V3 pin to GND ≈ 3.3 V? <em>If not, nothing else matters yet.</em></li>
+  <li><strong>Link.</strong> Does a serial port appear, does upload finish, does Serial print anything?</li>
+  <li><strong>Input half.</strong> Does the printed reading change cleanly (1 → 0) when you press? If it's random → floating. If it's stuck → follow the button's loop.</li>
+  <li><strong>Output half.</strong> Force the LED on (<code>digitalWrite(23, HIGH)</code> in <code>setup()</code>). Measure GPIO23 to GND: ≈ 3.3 V means the pin works and the LED loop is at fault. ≈ 0 V means pin number or code.</li>
+  <li><strong>Change one thing at a time</strong>, then re-check. Compare every measurement with what you expected <em>before</em> measuring.</li>
+</ol>
+<details class="deep"><summary>Multimeter basics for this circuit</summary>
+<p>Set to DC volts (V⎓, 20 V range if not auto-ranging). Black probe on a GND pin, red probe on the point you're checking. You're always measuring a voltage <em>between</em> two points (chapter 1). Don't use the current (A) setting across a supply: in that mode the meter is nearly a plain wire, so you'd create a short.</p></details>
+
+<h2>Case files</h2>
+<div class="quiz ex" data-ex="c8-a">
+<p class="qlabel">Case A · LED never lights</p>
+<p class="qtext">Serial shows 1 → 0 when you press. The LED never lights. Your meter reads 3.3 V from GPIO23 to GND while you press. Most likely cause?</p>
+<div class="opts">
+<button class="opt" type="button">The input is floating.</button>
+<div class="why">The reading changes cleanly with the button, so the input half is healthy.</div>
+<button class="opt" type="button">The board's GND isn't connected to the GND rail.</button>
+<div class="why">Good suspect for “LED never lights”. But the button also returns through that rail; without it, pressing couldn't pull the pin to 0, and Serial would be stuck at 1. The clean 1 → 0 rules this out.</div>
+<button class="opt" type="button" data-correct>The LED is reversed, or one of its legs isn't in the row you think.</button>
+<div class="why">Yes. Voltage arrives at the pin (output half OK in code), the input works, the shared GND works — what's left is the LED loop itself: polarity or a leg in the wrong breadboard column.</div>
+<button class="opt" type="button">The code uses the wrong pin number.</button>
+<div class="why">Then GPIO23 wouldn't show 3.3 V when you press.</div>
+</div>
+<details class="hint"><summary>Hint</summary><p>List the suspects from the fault lab that cause “LED never lights”, then cross out each one the Serial output or the meter reading rules out.</p></details>
+</div>
+
+<div class="quiz ex" data-ex="c8-b">
+<p class="qlabel">Case B · Ghost presses</p>
+<p class="qtext">Nobody touches the button, but Serial prints a jumble of 0s and 1s. Moving your hand near the wires changes the pattern.</p>
+<div class="opts">
+<button class="opt" type="button">The button is broken.</button>
+<div class="why">A broken button would stay open (reads 1 with a pull-up) or stay closed (reads 0) — not random.</div>
+<button class="opt" type="button" data-correct>The input is floating: <code>INPUT</code> instead of <code>INPUT_PULLUP</code>, or an input-only pin without an external resistor.</button>
+<div class="why">Sensitivity to your hand is the fingerprint of a floating input: the pin is picking up stray fields because nothing holds it at a defined level.</div>
+<button class="opt" type="button">The LED resistor is too small.</button>
+<div class="why">That affects the LED loop's current, not the input reading.</div>
+</div>
+</div>
+
+<div class="quiz ex" data-ex="c8-c">
+<p class="qlabel">Case C · Won't start after a change</p>
+<p class="qtext">For a new button you added an external 10 kΩ resistor from <strong>GPIO12</strong> to 3V3. Now after a reset the program doesn't start (the boot messages show errors). Remove the resistor and it boots fine. Why?</p>
+<div class="opts">
+<button class="opt" type="button">10 kΩ is too small and overloads the 3V3 supply.</button>
+<div class="why">3.3 V / 10 kΩ = 0.33 mA — negligible.</div>
+<button class="opt" type="button" data-correct>GPIO12 is a strapping pin: HIGH at reset tells the chip to power its flash at 1.8 V, but this module's flash needs 3.3 V.</button>
+<div class="why">Correct. GPIO12 (MTDI) is sampled at reset; HIGH selects a 1.8 V flash supply. The WROOM-32E's flash needs 3.3 V, so the program can't be read. Use a non-strapping pin.</div>
+<button class="opt" type="button">The button bounces during boot.</button>
+<div class="why">The problem appears without pressing anything, and disappears with the resistor alone removed.</div>
+</div>
+<details class="hint"><summary>Hint</summary><p>Look up GPIO12's category in chapter 3. When is that category's pin level read?</p></details>
+</div>
+
+<div class="quiz ex" data-ex="c8-d">
+<p class="qlabel">Case D · Always on</p>
+<p class="qtext">The LED is on from the moment the program starts and Serial prints only 0, pressed or not.</p>
+<div class="opts">
+<button class="opt" type="button">The LED is reversed.</button>
+<div class="why">A reversed LED never lights; and the stuck input reading points at the button side.</div>
+<button class="opt" type="button" data-correct>The button is rotated 90°, so its joined legs connect the pin to GND permanently.</button>
+<div class="why">Right. A constant 0 means the pin is always connected to GND, and the LED just obeys the code. Rotate the button or use diagonal legs.</div>
+<button class="opt" type="button">The pull-up is missing.</button>
+<div class="why">A missing pull-up gives random readings, not a solid 0.</div>
+</div>
+</div>
+
+<div class="quiz ex" data-ex="c8-e">
+<p class="qlabel">Case E · Barely visible</p>
+<p class="qtext">Everything works, but the LED is so dim you can barely see it in a lit room. Serial is fine.</p>
+<div class="opts">
+<button class="opt" type="button">The LED is reversed.</button>
+<div class="why">Reversed means fully off, not dim.</div>
+<button class="opt" type="button" data-correct>The resistor is much larger than intended (e.g. 10 kΩ — bands brown-black-orange — instead of 220 Ω, red-red-brown).</button>
+<div class="why">Yes: (3.3 − 2.0) V / 10 000 Ω ≈ 0.13 mA. Check the colour bands, or measure the resistor alone with the meter's Ω setting.</div>
+<button class="opt" type="button">GPIO23 is an input-only pin.</button>
+<div class="why">GPIO23 is a general GPIO, and an input-only pin would give no light at all.</div>
+</div>
+</div>
+
+<div class="quiz ex" data-ex="c8-f">
+<p class="qlabel">Case F · No port</p>
+<p class="qtext">The power LED is on. Your computer lists no new serial port, so you can't upload. What do you try first?</p>
+<div class="opts">
+<button class="opt" type="button">Hold BOOT while plugging in.</button>
+<div class="why">BOOT affects what the ESP32 does after reset, but the port is created by the USB bridge before the ESP32 is involved.</div>
+<button class="opt" type="button" data-correct>Another USB cable known to carry data; then check the bridge chip's driver.</button>
+<div class="why">Correct order: cheapest and most common cause first. Power LED on + no port = data path problem (chapter 2).</div>
+<button class="opt" type="button">Replace the voltage regulator.</button>
+<div class="why">The lit power LED shows power is arriving. And replacing parts is a last resort, never a first test.</div>
+</div>
+</div>
+
+<div class="think">
+<p class="qlabel">Open question</p>
+<p class="qtext">Symptom: LED never lights, Serial is stuck at 1. Two suspects from the fault lab fit. Name them, and describe one measurement or change that tells them apart.</p>
+<textarea aria-label="Your answer (not graded)" data-save="t8-sep"></textarea>
+<button class="btn reveal" type="button">Reveal model answer</button>
+<div class="answer" hidden><p><strong>Suspects:</strong> (1) board GND not connected to the GND rail; (2) button wired to 3V3 instead of GND (and, separately, a broken LED loop).</p>
+<p><strong>Separating test:</strong> measure from the board's GND pin to the GND rail with the meter on Ω (or continuity) with power off: no connection → suspect 1. Or follow the button's second leg: if it goes to the + rail → suspect 2. Also: in suspect 2, forcing the LED on in <code>setup()</code> lights it; in suspect 1, it doesn't.</p>
+<p><strong>Self-check:</strong> did your test give <em>different</em> results for the two suspects? A test that comes out the same for both doesn't help.</p></div>
+</div>
+</section>
+
+<!-- ============ CHAPTER 9 ============ -->
+<section class="chapter" data-title="Transfer & final challenge" data-min="8">
+<p class="kicker">Chapter 9 · Show what you can do</p>
+<h1>Same principle, new context — and a final challenge</h1>
+<h2>Recognising the pattern</h2>
+<p>A <strong>reed switch</strong> is a tiny glass tube with two metal strips inside that touch when a magnet comes close. Door and window sensors use them: magnet on the door, reed switch on the frame. Electrically it's the same as your button, so the same rules apply.</p>
+<div class="tablewrap"><table>
+<tr><th></th><th>Running example</th><th>New context</th></tr>
+<tr><td>Contacts close when…</td><td>finger presses</td><td>magnet is near (door closed)</td></tr>
+<tr><td>Wiring</td><td>pin ↔ button ↔ GND + pull-up</td><td>pin ↔ reed switch ↔ GND + pull-up</td></tr>
+<tr><td>Reading</td><td>pressed = 0</td><td>door closed = 0, open = 1</td></tr>
+<tr><td>Failure if no pull-up</td><td>random readings when released</td><td>random readings when the door is open</td></tr>
+</table></div>
+
+<h2>Final challenge: a door indicator</h2>
+<div class="card">
+<p><strong>Goal:</strong> a <span style="color:var(--c-gpio);font-weight:700">green</span> LED lights while the door is closed; a <span style="color:var(--c-power);font-weight:700">red</span> LED lights while it's open.</p>
+<p><strong>Parts:</strong> DevKitC, reed switch (2 wires, no polarity), red LED (V<sub>F</sub> ≈ 2.0 V), green LED (V<sub>F</sub> ≈ 2.2 V), resistors of your choice.</p>
+<p><strong>Constraint:</strong> a display already uses GPIO 4, 5 and 16–33. The only free GPIOs are <strong>2, 12, 13, 15, 34, 35</strong>.</p>
+<p><strong>Your tasks</strong> (write your answers — they're saved only in this browser):</p>
+<ol>
+  <li>Choose a pin for the reed switch and a pin for each LED. Justify each choice and say which free pins you avoided and why.</li>
+  <li>List every connection (like the table in chapter 7), including anything needed because of your pin choice.</li>
+  <li>Choose both resistor values and show the current calculation.</li>
+  <li>Write the key lines of code (<code>pinMode</code> and the logic).</li>
+  <li>Predict what Serial prints with the door open and closed.</li>
+  <li>Troubleshoot: after building it, the input reads 1 constantly, even with the door closed and the magnet touching the switch. Give two plausible causes and how you'd tell them apart.</li>
+</ol>
+</div>
+<textarea style="min-height:220px" aria-label="Your challenge answer" data-save="t9-challenge" placeholder="Pins and reasons…&#10;Connections…&#10;Resistors…&#10;Code…&#10;Predictions…&#10;Troubleshooting…"></textarea>
+
+<details class="hint"><summary>Hint 1 — the input</summary><p>Two of the free pins can only read. That's exactly what a switch needs — but recall what those pins lack (chapter 3/6).</p></details>
+<details class="hint"><summary>Hint 2 — the outputs</summary><p>The remaining pins include strapping pins. For each, ask: what level does it need at reset, and will an LED + resistor to GND push it the wrong way? (Chapter 3 pin details.)</p></details>
+<details class="hint"><summary>Hint 3 — the trap</summary><p>Is there a free pin where adding a pull-up resistor would stop the board from booting? (Case C.)</p></details>
+
+<details class="deep" id="solution"><summary>Explained solution (try first!)</summary>
+<h3>1 · Pins</h3>
+<ul>
+<li><strong>Reed switch → GPIO35</strong> (or 34). Input-only pins are ideal for a switch and leave output-capable pins free. Because they have <em>no internal pull-up</em>, add an <strong>external 10 kΩ from GPIO35 to 3V3</strong>.</li>
+<li><strong>Green LED → GPIO13</strong>: the only free general GPIO.</li>
+<li><strong>Red LED → GPIO2</strong>: a strapping pin, but its default at reset is LOW (internal pull-down), and an LED + resistor to GND doesn't pull it high, so boot is unaffected. Note: on clones with an onboard LED on GPIO2, that LED will light too.</li>
+<li><strong>Avoided:</strong> GPIO34/35 for LEDs (no output driver). <strong>GPIO12 for the switch</strong> — its pull-up would make the chip select 1.8 V flash and fail to boot (case C). GPIO15 would also work for an LED to GND, but it's a strapping pin with a default pull-up that controls boot-log printing; GPIO2 is the cleaner choice. GPIO12 with an LED to GND would technically boot, but it's one careless pull-up away from a non-booting board.</li>
+</ul>
+<h3>2 · Connections</h3>
+<ol>
+<li>USB → board (power + Serial). Board GND → GND rail.</li>
+<li>GPIO13 → 220 Ω → green anode; green cathode → GND rail.</li>
+<li>GPIO2 → 220 Ω → red anode; red cathode → GND rail.</li>
+<li>GPIO35 → reed switch → GND rail.</li>
+<li>10 kΩ from GPIO35 to 3V3 (external pull-up).</li>
+</ol>
+<h3>3 · Resistors</h3>
+<p>Red: (3.3 − 2.0) / 220 ≈ 5.9 mA. Green: (3.3 − 2.2) / 220 = 5.0 mA. 220–330 Ω both fine. Pull-up current when the door is closed: 3.3 / 10 000 = 0.33 mA, harmless.</p>
+<h3>4 · Code</h3>
+<pre><code>const int DOOR = 35, GREEN = 13, RED = 2;
+void setup() {
+  Serial.begin(115200);
+  pinMode(DOOR, INPUT);          // external pull-up does the job; INPUT_PULLUP would do nothing here
+  pinMode(GREEN, OUTPUT);
+  pinMode(RED, OUTPUT);
+}
+void loop() {
+  int open = digitalRead(DOOR);  // 1 = open (magnet away), 0 = closed
+  digitalWrite(GREEN, open ? LOW : HIGH);
+  digitalWrite(RED,   open ? HIGH : LOW);
+  Serial.println(open);
+  delay(50);
+}</code></pre>
+<h3>5 · Prediction</h3><p>Door closed → 0 (green on). Door open → 1 (red on).</p>
+<h3>6 · Troubleshooting “stuck at 1”</h3>
+<p>Causes: (a) the reed switch's second wire isn't on the GND rail (or the rail isn't connected to board GND — but then the LEDs would fail too); (b) the switch never closes — magnet too weak, wrongly oriented, or a damaged switch. Separate them: with power off, measure the switch alone on Ω/continuity while moving the magnet. It toggles → wiring; it doesn't → switch or magnet.</p>
+</details>
+
+<h3>Self-assessment</h3>
+<p class="caption">Tick only what you could do <em>without</em> opening the solution. This is your judgement, not an automatic grade.</p>
+<div class="rubric" id="rubric">
+<label><input type="checkbox" data-r="r1"> I chose an input pin and explained the need for an external pull-up (or chose a pin with an internal one and enabled it).</label>
+<label><input type="checkbox" data-r="r2"> I avoided input-only pins for the LEDs and explained why.</label>
+<label><input type="checkbox" data-r="r3"> I spotted that GPIO12 + pull-up prevents booting, or gave a sound strapping-pin argument for my choices.</label>
+<label><input type="checkbox" data-r="r4"> Every LED loop in my list returns to GND, with correct polarity.</label>
+<label><input type="checkbox" data-r="r5"> My resistor values follow from (V<sub>supply</sub> − V<sub>F</sub>) / I with correct units.</label>
+<label><input type="checkbox" data-r="r6"> I predicted the Serial values correctly and gave a test that separates two causes.</label>
+</div>
+<p class="fb" id="rubricSum"></p>
+</section>
+
+<!-- ============ CHAPTER 10 ============ -->
+<section class="chapter" data-title="Reference & review" data-min="—">
+<p class="kicker">Chapter 10 · Keep this</p>
+<h1>Reference sheet</h1>
+<div class="tablewrap"><table>
+<tr><th>Topic</th><th>Remember</th></tr>
+<tr><td>Logic level</td><td>3.3 V. Never put more than 3.3 V on a GPIO (absolute max 3.6 V). HIGH ≥ ~2.5 V, LOW ≤ ~0.8 V.</td></tr>
+<tr><td>Safe first pins (DevKitC)</td><td>4, 13, 14, 16–19, 21–23, 25–27, 32, 33</td></tr>
+<tr><td>Input-only</td><td>34, 35, 36, 39 — no output, no internal pull-up/down</td></tr>
+<tr><td>Boot-sensitive</td><td>0, 2, 5, 12, 15 — never pull 12 HIGH; don't hold 0 LOW at power-up</td></tr>
+<tr><td>Never use</td><td>6–11 (flash); avoid 1/3 (USB serial)</td></tr>
+<tr><td>LED resistor</td><td>R = (V<sub>supply</sub> − V<sub>F</sub>) / I. At 3.3 V: red 220–330 Ω ≈ 4–6 mA</td></tr>
+<tr><td>LED polarity</td><td>Long leg = anode (+) toward the pin; short leg / flat edge = cathode (−) toward GND</td></tr>
+<tr><td>Button</td><td>Pin ↔ button ↔ GND + <code>INPUT_PULLUP</code> → pressed reads 0. Use diagonal legs if unsure.</td></tr>
+<tr><td>Power</td><td>One source at a time (USB <em>or</em> 5V pin <em>or</em> 3V3 pin). Never connect 3V3 or 5V to GND.</td></tr>
+<tr><td>Debug order</td><td>Power → link → input half (Serial) → output half (force + measure) → one change at a time</td></tr>
+</table></div>
+<pre><code>pinMode(pin, OUTPUT | INPUT | INPUT_PULLUP | INPUT_PULLDOWN);
+digitalWrite(pin, HIGH | LOW);   // outputs only
+int v = digitalRead(pin);        // returns HIGH (1) or LOW (0)</code></pre>
+
+<h2>Glossary</h2>
+<div class="tablewrap"><table id="glossary">
+<tr><th>Term</th><th>Meaning in this lesson</th></tr>
+<tr><td>Active-low</td><td>“On” or “pressed” corresponds to LOW (0 V).</td></tr>
+<tr><td>Anode / cathode</td><td>An LED's + leg (long) / − leg (short, flat edge). Current flows anode → cathode.</td></tr>
+<tr><td>BOOT button</td><td>Button on GPIO0; held at reset to enter firmware download mode.</td></tr>
+<tr><td>Breadboard, rail</td><td>Solderless board; holes joined by hidden clips. Rails = long strips for supply and GND.</td></tr>
+<tr><td>Bounce</td><td>Brief rapid on/off flicker as switch contacts close.</td></tr>
+<tr><td>Circuit / loop</td><td>Closed path from a source's + side back to its − side.</td></tr>
+<tr><td>Current (A, mA)</td><td>Rate of charge flow. 1 mA = 0.001 A.</td></tr>
+<tr><td>Diode</td><td>One-way part for current; an LED is a light-emitting diode.</td></tr>
+<tr><td>Drive strength</td><td>How much current an output pin is set up to supply (ESP32 default ≈ 20 mA setting).</td></tr>
+<tr><td>EN</td><td>Chip enable/reset line and button.</td></tr>
+<tr><td>Flash</td><td>Memory chip in the module that stores your program; uses GPIO6–11.</td></tr>
+<tr><td>Floating</td><td>An input connected to nothing that defines its voltage; reads randomly.</td></tr>
+<tr><td>Forward voltage (V<sub>F</sub>)</td><td>Voltage an LED takes while conducting (≈2 V red, ≈3 V blue/white).</td></tr>
+<tr><td>GND (ground)</td><td>The 0 V reference and return path.</td></tr>
+<tr><td>GPIO</td><td>General-purpose input/output pin controlled by your program.</td></tr>
+<tr><td>HIGH / LOW</td><td>Logic 1 (≈3.3 V) / logic 0 (≈0 V).</td></tr>
+<tr><td>Input-only pin</td><td>GPIO34–39: can read, can't output, no internal pulls.</td></tr>
+<tr><td>Module</td><td>Shielded sub-board holding the ESP32 chip, flash, crystal and antenna.</td></tr>
+<tr><td>Ohm's law</td><td>V = I × R for a resistor.</td></tr>
+<tr><td>Pull-up / pull-down</td><td>Resistor holding an input HIGH / LOW until something stronger overrides it.</td></tr>
+<tr><td>Regulator (LDO)</td><td>Part that turns 5 V into a steady 3.3 V.</td></tr>
+<tr><td>Resistance (Ω)</td><td>Opposition to current; a resistor provides a set amount.</td></tr>
+<tr><td>Schematic / symbol</td><td>Diagram of connections using standard symbols rather than pictures.</td></tr>
+<tr><td>Series</td><td>Parts in one loop, one after another; the same current flows through all of them.</td></tr>
+<tr><td>Serial / UART</td><td>Simple text link; on this board it runs over USB via the bridge chip, on GPIO1/3.</td></tr>
+<tr><td>Short circuit</td><td>Near-zero-resistance path between supply and GND; huge current.</td></tr>
+<tr><td>Strapping pin</td><td>Pin whose level at reset selects boot options (GPIO0, 2, 5, 12, 15).</td></tr>
+<tr><td>USB-to-UART bridge</td><td>Chip translating USB into serial for uploads and Serial Monitor.</td></tr>
+<tr><td>Voltage (V)</td><td>Electrical push between two points.</td></tr>
+</table></div>
+
+<h2>Questions for a later review session</h2>
+<p class="caption">Try these in a few days, from memory, before peeking.</p>
+<div class="think"><p class="qtext">1. Sketch the LED loop from GPIO23 to GND and mark where the 3.3 V “goes”.</p><button class="btn reveal" type="button">Reveal</button><div class="answer" hidden><p>GPIO23 (3.3 V) → resistor (≈1.3 V across it) → LED (≈2.0 V across it) → GND (0 V). The parts' voltages add up to the supply.</p></div></div>
+<div class="think"><p class="qtext">2. Why does an unconnected input read randomly, and what are two ways to fix it?</p><button class="btn reveal" type="button">Reveal</button><div class="answer" hidden><p>Nothing defines its voltage, and the input draws almost no current, so stray fields move it around. Fixes: an internal pull-up/down (<code>INPUT_PULLUP</code>/<code>INPUT_PULLDOWN</code>), or an external resistor (needed on GPIO34–39).</p></div></div>
+<div class="think"><p class="qtext">3. Which free pin would you never give a pull-up resistor, and what happens if you do?</p><button class="btn reveal" type="button">Reveal</button><div class="answer" hidden><p>GPIO12 (MTDI). HIGH at reset selects 1.8 V for the flash; boards with 3.3 V flash then fail to boot.</p></div></div>
+<div class="think"><p class="qtext">4. The power LED is on but there's no serial port. What's proven working, and what do you test first?</p><button class="btn reveal" type="button">Reveal</button><div class="answer" hidden><p>The power path works. Test the data path: cable known to carry data first, then the bridge chip's driver.</p></div></div>
+<div class="think"><p class="qtext">5. You want an LED to be dimmer. Bigger or smaller resistor — and by roughly how much to halve the current?</p><button class="btn reveal" type="button">Reveal</button><div class="answer" hidden><p>Bigger. Current = V<sub>R</sub>/R, so doubling R (e.g. 220 → 470 Ω) roughly halves the current.</p></div></div>
+
+<h2>Next logical topic</h2>
+<p><strong>Module 2: PWM dimming, debouncing and interrupts.</strong> You'll make the LED fade (rapid on/off switching — the eye averages it), make the button toggle the LED reliably, and react to presses without constantly checking. It builds directly on the circuit you have.</p>
+
+<h2>Sources and what was checked</h2>
+<ul>
+  <li>Espressif, <a href="https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32/esp32-devkitc/user_guide.html">ESP32-DevKitC V4 User Guide</a> — checked: board components, the “one power source only” warning, J2/J3 pin tables, GPIO6–11 note, GPIO16/17 on WROVER.</li>
+  <li>Espressif, <a href="https://documentation.espressif.com/esp32_datasheet_en.pdf">ESP32 Series Datasheet</a> (v5.3) — checked: strapping pins and their defaults, MTDI/flash-voltage selection, GPIO34–39 input-only without pulls, 3.6 V absolute maximum, VIH/VIL thresholds, output drive strengths, 45 kΩ internal pull resistors.</li>
+  <li>Espressif, <a href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/gpio.html">Arduino-ESP32 GPIO API</a> — checked: <code>pinMode</code> modes including <code>INPUT_PULLDOWN</code>, 45 kΩ internal pulls.</li>
+  <li>Further reading (not re-checked for this lesson): <a href="https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html">Arduino-ESP32 installation guide</a>.</li>
+</ul>
+<h3>Assumptions and simplifications</h3>
+<ul>
+  <li>Board: ESP32-DevKitC V4 with WROOM-32E. Clone boards: confirm pin labels yourself.</li>
+  <li>LED forward voltages are typical values; check your LED's datasheet if you have it.</li>
+  <li>Calculations treat a HIGH pin as exactly 3.3 V; the datasheet only guarantees at least 0.8 × 3.3 V (≈ 2.6 V) under load, so real currents are a bit lower.</li>
+  <li>The floating-input trace, LED brightness and fault-lab behaviour are qualitative illustrations, not physical simulations.</li>
+  <li>The board drawing is simplified; part positions are approximate.</li>
+</ul>
+<p><button class="btn" id="resetAll" type="button">Reset all progress and answers</button></p>
+</section>
+
+<nav class="pager" aria-label="Chapter navigation">
+  <button type="button" id="prevBtn" class="prev"></button>
+  <button type="button" id="nextBtn" class="next"></button>
+</nav>
+</main>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const KEY='esp32lesson:';
+const store={get(k,d){try{const v=localStorage.getItem(KEY+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},
+             set(k,v){try{localStorage.setItem(KEY+k,JSON.stringify(v));}catch(e){}}};
+const reduceMotion=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- theme ---------- */
+const themes=['auto','light','dark'];
+let theme=store.get('theme','auto');
+function applyTheme(){ if(theme==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',theme); $('#themebtn').textContent='Theme: '+theme; }
+$('#themebtn').addEventListener('click',()=>{theme=themes[(themes.indexOf(theme)+1)%3];store.set('theme',theme);applyTheme();});
+applyTheme();
+
+/* ---------- chapters / nav / progress ---------- */
+const chapters=$$('.chapter');
+const visited=new Set(store.get('visited',[]));
+const solved=new Set(store.get('solved',[]));
+const allEx=$$('.ex').map(e=>e.dataset.ex);
+let cur=0;
+const enterHooks={}, leaveHooks={};
+
+function buildToc(){
+  const ol=$('#toclist'); ol.innerHTML='';
+  chapters.forEach((c,i)=>{
+    const exs=$$('.ex',c).map(e=>e.dataset.ex);
+    const n=exs.filter(x=>solved.has(x)).length;
+    const li=document.createElement('li');
+    const meta=[];
+    if(c.dataset.min!=='—') meta.push(c.dataset.min+' min');
+    if(exs.length) meta.push(n+'/'+exs.length+' solved');
+    li.innerHTML=`<a href="#ch${i}" ${i===cur?'aria-current="page"':''}><span class="num">${i}</span><span>${c.dataset.title}</span><span class="meta">${visited.has(i)?'<span class="v">✓ visited</span><br>':''}${meta.join('<br>')}</span></a>`;
+    ol.appendChild(li);
+  });
+  $('#pv').textContent=visited.size+' / '+chapters.length;
+  $('#pvb').style.width=(100*visited.size/chapters.length)+'%';
+  const ns=allEx.filter(x=>solved.has(x)).length;
+  $('#pe').textContent=ns+' / '+allEx.length;
+  $('#peb').style.width=(100*ns/allEx.length)+'%';
+}
+function show(i,focus){
+  i=Math.max(0,Math.min(chapters.length-1,i));
+  if(leaveHooks[cur]) leaveHooks[cur]();
+  chapters.forEach((c,k)=>c.classList.toggle('active',k===i));
+  cur=i; visited.add(i); store.set('visited',[...visited]);
+  const p=$('#prevBtn'), n=$('#nextBtn');
+  p.style.visibility=i>0?'visible':'hidden';
+  n.style.visibility=i<chapters.length-1?'visible':'hidden';
+  if(i>0) p.textContent='← '+chapters[i-1].dataset.title;
+  if(i<chapters.length-1) n.textContent='Next: '+chapters[i+1].dataset.title+' →';
+  buildToc();
+  if(enterHooks[i]) enterHooks[i]();
+  if(focus){ window.scrollTo(0,0); const h=chapters[i].querySelector('h1'); if(h){h.setAttribute('tabindex','-1');h.focus({preventScroll:true});} }
+  if(window.innerWidth<900 && focus) $('#tocd').open=false;
+}
+function fromHash(){ const m=/^#ch(\d+)$/.exec(location.hash); return m?+m[1]:null; }
+window.addEventListener('hashchange',()=>{const h=fromHash(); if(h!==null&&h!==cur) show(h,true);});
+$('#prevBtn').addEventListener('click',()=>{location.hash='#ch'+(cur-1);});
+$('#nextBtn').addEventListener('click',()=>{location.hash='#ch'+(cur+1);});
+function solve(id){ if(!id||solved.has(id)) return; solved.add(id); store.set('solved',[...solved]); buildToc(); markSolved(); }
+function markSolved(){ $$('.ex').forEach(e=>{ let b=e.querySelector('.solved-badge'); if(solved.has(e.dataset.ex)){ if(!b){b=document.createElement('span');b.className='solved-badge';b.textContent='✓ solved';e.prepend(b);} } else if(b) b.remove(); }); }
+
+/* ---------- generic exercises ---------- */
+$$('.quiz').forEach(q=>{
+  $$('.opt',q).forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const ok=btn.hasAttribute('data-correct');
+      const why=btn.nextElementSibling;
+      $$('.why',q).forEach(w=>w.classList.remove('show'));
+      btn.classList.remove('right','wrong'); btn.classList.add(ok?'right':'wrong');
+      if(why&&why.classList.contains('why')){
+        if(!why.querySelector('.verdict')){ const v=document.createElement('span'); v.className='verdict'; v.textContent=ok?'✓ Correct. ':'✗ Not quite. '; why.prepend(v); }
+        why.classList.add('show', ok?'good':'badv');
+      }
+      if(ok) solve(q.dataset.ex);
+    });
+  });
+});
+$$('.reveal').forEach(b=>b.addEventListener('click',()=>{const a=b.parentElement.querySelector('.answer'); a.hidden=!a.hidden; b.textContent=a.hidden?b.textContent.replace('Hide','Reveal'):b.textContent.replace('Reveal','Hide');}));
+$$('textarea[data-save]').forEach(t=>{ t.value=store.get('ta:'+t.dataset.save,''); t.addEventListener('input',()=>store.set('ta:'+t.dataset.save,t.value)); });
+$$('.numcheck').forEach(nc=>{
+  const inp=$('input',nc), fb=$('.fb',nc), ans=$('.answer',nc);
+  const lo=+nc.dataset.lo, hi=+nc.dataset.hi;
+  const traps=(nc.dataset.traps||'').split('|').filter(Boolean).map(s=>{const k=s.indexOf(':');return [+s.slice(0,k),s.slice(k+1)];});
+  const run=()=>{
+    const v=parseFloat(inp.value);
+    fb.className='fb';
+    if(!isFinite(v)){ fb.textContent='Enter a number first.'; return; }
+    if(v>=lo&&v<=hi){ fb.classList.add('good'); fb.textContent='✓ Correct.'; ans.hidden=false; solve(nc.dataset.ex); return; }
+    const t=traps.find(([x])=>Math.abs(v-x)<=Math.abs(x)*0.06);
+    fb.classList.add('badv');
+    fb.textContent='✗ '+(t?t[1]:'Not quite. Check which voltage is across the resistor, and convert mA to A.');
+    if(!$('.showsol',nc)){ const b=document.createElement('button'); b.type='button'; b.className='btn showsol'; b.textContent='Show worked solution'; b.addEventListener('click',()=>{ans.hidden=false;}); fb.after(b); }
+  };
+  $('.check',nc).addEventListener('click',run);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')run();});
+});
+
+/* ---------- hold-to-press helper ---------- */
+function holdButton(btn,latch,onChange){
+  let down=false;
+  const set=v=>{ const eff=v||(latch&&latch.checked); if(eff===down) return; down=eff; btn.classList.toggle('down',down); btn.setAttribute('aria-pressed',String(down)); btn.textContent=down?'Pressed':'Hold to press'; onChange(down); };
+  btn.setAttribute('aria-pressed','false');
+  btn.addEventListener('pointerdown',e=>{e.preventDefault(); try{btn.setPointerCapture(e.pointerId);}catch(_){} set(true);});
+  ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>btn.addEventListener(ev,()=>set(false)));
+  btn.addEventListener('keydown',e=>{ if((e.key===' '||e.key==='Enter')&&!e.repeat){e.preventDefault(); set(true);} });
+  btn.addEventListener('keyup',e=>{ if(e.key===' '||e.key==='Enter'){e.preventDefault(); set(false);} });
+  btn.addEventListener('blur',()=>set(false));
+  btn.addEventListener('contextmenu',e=>e.preventDefault());
+  if(latch) latch.addEventListener('change',()=>{ down=!latch.checked; set(latch.checked); });
+  return { reset(){ if(latch) latch.checked=false; down=true; set(false);} , get pressed(){return down;} };
+}
+
+/* ---------- CHAPTER 1: loop ---------- */
+const loopState={closed:false,cut:false,paused:false};
+function drawLoop(){
+  const on=loopState.closed&&!loopState.cut;
+  const sw=loopState.closed?'M130 40 L190 40':'M130 40 L180 14';
+  const bottom=loopState.cut?'<path d="M370 200 H270 M220 200 H50" class="wire w-gnd"/><text x="245" y="190" class="sbad" text-anchor="middle">✂ cut</text>':'<path d="M370 200 H50" class="wire w-gnd"/>';
+  const flowPath='M50 110 V40 H370 V200 H50 V125';
+  let flow='';
+  if(on){
+    if(reduceMotion) flow='<path d="M250 32 l10 8 l-10 8 Z M362 150 l8 10 l8 -10 Z M210 192 l-10 8 l10 8 Z" class="static-arrow"/>';
+    else flow=`<path d="${flowPath}" class="flow"/>`;
+  }
+  $('#loopsvg').innerHTML=`<svg viewBox="0 0 420 230" role="img" aria-label="Loop circuit: battery, switch ${loopState.closed?'closed':'open'}, resistor, LED${on?' lit':' off'}, return wire ${loopState.cut?'cut':'intact'}">
+   <path d="M50 110 V40 H130 M190 40 H240 M300 40 H370 V95 M370 145 V200" class="wire w-sig"/>
+   ${bottom}
+   <path d="M50 125 V200" class="wire w-gnd"/>
+   <line x1="30" y1="110" x2="70" y2="110" class="sym" stroke-width="3"/><line x1="40" y1="125" x2="60" y2="125" class="sym" stroke-width="5"/>
+   <text x="76" y="108" class="slabel">+</text><text x="76" y="132" class="slabel">−</text><text x="10" y="160" class="smuted">3 V</text>
+   <circle cx="130" cy="40" r="4" class="symfill"/><circle cx="190" cy="40" r="4" class="symfill"/>
+   <path d="${sw}" class="sym" stroke-width="3"/><text x="160" y="64" class="smuted" text-anchor="middle">switch</text>
+   <path d="M240 40 l5 -9 l10 18 l10 -18 l10 18 l10 -18 l10 18 l5 -9" class="sym"/><text x="270" y="68" class="smuted" text-anchor="middle">resistor</text>
+   ${on?'<circle cx="370" cy="120" r="26" class="glow" opacity=".45"/>':''}
+   <path d="M352 95 L388 95 L370 125 Z" class="ledfill"/><line x1="352" y1="125" x2="388" y2="125" class="sym"/>
+   <line x1="370" y1="125" x2="370" y2="145" class="sym"/><text x="396" y="124" class="smuted">LED</text>
+   <text x="200" y="222" class="smuted" text-anchor="middle">return wire</text>
+   ${flow}
+  </svg>`;
+  $('#loopwrap').classList.toggle('paused',loopState.paused);
+  const st=$('#loopStatus');
+  st.className='status '+(on?'good':'mid');
+  st.textContent=on?'Loop complete → current flows everywhere in the loop → LED lights.':
+    (loopState.cut&&loopState.closed?'Switch closed, but the return wire is cut → no complete loop → no current anywhere.':
+     loopState.cut?'Switch open and return wire cut → no current.':'Switch open → loop broken → no current anywhere, not even on the battery side.');
+  $('#loopSwitch').setAttribute('aria-pressed',loopState.closed); $('#loopSwitch').textContent=loopState.closed?'Open the switch':'Close the switch';
+  $('#loopCut').setAttribute('aria-pressed',loopState.cut); $('#loopCut').textContent=loopState.cut?'Repair the return wire':'Cut the return wire';
+  $('#loopPause').setAttribute('aria-pressed',loopState.paused); $('#loopPause').textContent=loopState.paused?'Resume animation':'Pause animation';
+  $('#loopPause').hidden=reduceMotion;
+}
+$('#loopSwitch').addEventListener('click',()=>{loopState.closed=!loopState.closed;drawLoop();});
+$('#loopCut').addEventListener('click',()=>{loopState.cut=!loopState.cut;drawLoop();});
+$('#loopPause').addEventListener('click',()=>{loopState.paused=!loopState.paused;drawLoop();});
+$('#loopReset').addEventListener('click',()=>{Object.assign(loopState,{closed:false,cut:false,paused:false});drawLoop();});
+drawLoop();
+
+/* ---------- BOARD (ch2 + ch3) ---------- */
+const PINS_L=[['3V3',null,'power'],['EN',null,'en'],['VP',36,'inonly'],['VN',39,'inonly'],['IO34',34,'inonly'],['IO35',35,'inonly'],['IO32',32,'gpio'],['IO33',33,'gpio'],['IO25',25,'gpio'],['IO26',26,'gpio'],['IO27',27,'gpio'],['IO14',14,'gpio'],['IO12',12,'strap'],['GND',null,'gnd'],['IO13',13,'gpio'],['D2',9,'flash'],['D3',10,'flash'],['CMD',11,'flash'],['5V',null,'power']];
+const PINS_R=[['GND',null,'gnd'],['IO23',23,'gpio'],['IO22',22,'gpio'],['TX',1,'serial'],['RX',3,'serial'],['IO21',21,'gpio'],['GND',null,'gnd'],['IO19',19,'gpio'],['IO18',18,'gpio'],['IO5',5,'strap'],['IO17',17,'gpio'],['IO16',16,'gpio'],['IO4',4,'gpio'],['IO0',0,'strap'],['IO2',2,'strap'],['IO15',15,'strap'],['D1',8,'flash'],['D0',7,'flash'],['CLK',6,'flash']];
+const CATS={
+  gpio:{n:'General GPIO',d:'Input or output; internal pull-up and pull-down available. Your first choice for LEDs and buttons.',out:'yes',pull:'yes (≈45 kΩ)'},
+  inonly:{n:'Input-only',d:'Can read voltages but has no output driver and no internal pull-up/pull-down. Fine for inputs that drive their own HIGH/LOW, or with an external pull resistor.',out:'no',pull:'no — add an external resistor'},
+  strap:{n:'Boot-sensitive (strapping)',d:'Its level is sampled at power-up/reset to choose boot options. Usable after boot, but a circuit that forces the wrong level at startup can stop the board from booting.',out:'yes',pull:'yes'},
+  serial:{n:'Serial (UART0)',d:'Wired to the USB-to-UART bridge for uploading and Serial Monitor. Using it for other things disturbs both.',out:'avoid',pull:'avoid'},
+  flash:{n:'Flash-reserved',d:'Connected to the flash memory inside the module (SPI bus). Using it crashes the program. Never connect anything.',out:'never',pull:'never'},
+  power:{n:'Power',d:'A supply pin, not a signal. Never connect directly to GND or to a GPIO.',out:'—',pull:'—'},
+  gnd:{n:'Ground',d:'0 V reference and return path. All GND pins are connected together.',out:'—',pull:'—'},
+  en:{n:'EN (reset)',d:'Chip enable. Pulled LOW → chip held in reset; the EN button does exactly that. Not a GPIO.',out:'—',pull:'—'}
+};
+const PIN_NOTES={
+  '3V3':'Output of the onboard 3.3 V regulator when USB-powered. Can supply small parts (like a pull-up resistor). Espressif: use only one power source at a time.',
+  '5V':'Connected to USB 5 V when USB-powered. Never connect it to a GPIO (3.6 V absolute max).',
+  'EN':'Pulling EN to GND resets the chip. Wire it accidentally to GND and nothing ever runs.',
+  0:'Also the BOOT button. Must be HIGH at reset to run your program (internal pull-up default). Something holding it LOW at power-up → download mode instead of your program.',
+  2:'Default pull-down at reset; together with GPIO0 it selects the boot mode. Many clone boards put an onboard LED here. An LED + resistor to GND keeps it LOW, which is compatible with booting.',
+  5:'Default pull-up at reset (affects SDIO timing). Usually harmless, but avoid while learning.',
+  12:'MTDI. If HIGH at reset, the flash supply switches to 1.8 V. The WROOM-32E\'s flash needs 3.3 V → the board fails to boot. Never put a pull-up here.',
+  15:'MTDO. Default pull-up; controls whether the boot log is printed on the serial port.',
+  16:'Free on WROOM modules; reserved on WROVER modules (PSRAM).',17:'Free on WROOM modules; reserved on WROVER modules (PSRAM).',
+  1:'U0TXD — the ESP32 sends Serial text here.',3:'U0RXD — the ESP32 receives uploads and Serial input here.',
+  36:'Printed “VP” (SENSOR_VP).',39:'Printed “VN” (SENSOR_VN).',
+  23:'Used for the LED in this lesson\'s running example.',18:'Used for the button in this lesson\'s running example.'
+};
+const PARTS={
+  usb:{n:'Micro-USB port',what:'Brings in 5 V from your computer and carries data in both directions.',why:'One cable powers the board, uploads programs and carries Serial text.',fail:'Charge-only cables have no data wires: the power LED lights, but no serial port appears.'},
+  bridge:{n:'USB-to-UART bridge chip',what:'Translates USB (what your computer speaks) into UART serial (what the ESP32 uses for uploading and Serial), on GPIO1 (TX) and GPIO3 (RX). It also drives EN and GPIO0 so uploads can reset the chip automatically.',why:'The original ESP32 has no USB of its own.',fail:'No driver for the chip (common types: CP210x, CH340) → no port. Circuits on GPIO1/3 disturb uploads and Serial.'},
+  ldo:{n:'Voltage regulator (LDO)',what:'Turns USB 5 V into a steady 3.3 V for the module and the 3V3 pin.',why:'The ESP32 supply must stay at or below 3.6 V (datasheet absolute maximum).',fail:'Shorting 3V3 to GND overloads it: the board resets or the regulator gets hot. Powering two sources at once can damage the board or the source.'},
+  module:{n:'ESP32-WROOM-32E module',what:'The shielded sub-board with the ESP32 chip, the flash memory that stores your program, and a 40 MHz crystal (the clock).',why:'Packages the hard radio and memory design so the board maker doesn\'t have to.',fail:'The flash uses GPIO6–11 inside — that\'s why those header pins are off-limits. See the exploded view below.'},
+  antenna:{n:'PCB antenna',what:'The wavy copper trace is the Wi-Fi/Bluetooth antenna.',why:'Wireless needs an antenna; printing it on the board is cheap.',fail:'Metal, hands or wires right on top weaken the signal. Not relevant for LED and button, but don\'t bury it.'},
+  en:{n:'EN button (reset)',what:'Pulls the chip\'s enable line LOW; releasing restarts your program from setup().',why:'A quick way to restart without unplugging.',fail:'Anything holding the EN pin LOW keeps the chip in reset — nothing runs, Serial is silent.'},
+  boot:{n:'BOOT button',what:'Connected to GPIO0. Held while the chip starts → firmware download mode instead of your program. After boot it\'s an ordinary button your code can read on GPIO0.',why:'Lets you force upload mode if automatic reset doesn\'t work.',fail:'Upload stuck at “Connecting…”: hold BOOT. Circuit holding GPIO0 LOW at power-up: your program never starts.'},
+  led:{n:'Power LED',what:'Lights when 5 V is present (from USB or the 5V pin).',why:'First diagnostic: is power arriving at all?',fail:'Not controllable from code. Off with USB plugged in → cable, port or board power problem; check before touching code.'},
+  headers:{n:'Pin headers J2 (left) and J3 (right)',what:'Two rows of 19 pins bringing power, ground and most ESP32 signals to the outside.',why:'This is where your circuit connects.',fail:'Wrong pin = most beginner bugs. Chapter 3 maps every pin.'}
+};
+function pinY(i){return 60+i*30;}
+function boardSVG(mode){
+  const part=(id,inner,hl)=>mode==='parts'?`<g class="part" data-part="${id}" tabindex="0" role="button" aria-label="${PARTS[id].n}">${inner}${hl}</g>`:inner;
+  let s=`<svg viewBox="0 0 400 650" role="${mode==='parts'?'group':'group'}" aria-label="ESP32-DevKitC V4 board ${mode==='parts'?'with selectable parts':'with selectable pins'}">`;
+  s+=`<rect x="108" y="8" width="184" height="612" rx="10" class="pcb"/>`;
+  s+=part('antenna',`<rect x="140" y="14" width="120" height="50" class="ant-bg"/><path d="M150 52 h18 v-28 h14 v28 h14 v-28 h14 v28 h14 v-28 h14 v28 h10" class="ant"/>`,`<rect class="hl" x="136" y="11" width="128" height="56" rx="3"/>`);
+  s+=part('module',`<rect x="140" y="66" width="120" height="164" rx="3" class="shield"/><text x="200" y="140" class="shield-t">ESP32-</text><text x="200" y="155" class="shield-t">WROOM-32E</text>`,`<rect class="hl" x="136" y="63" width="128" height="170" rx="4"/>`);
+  s+=part('bridge',`<rect x="172" y="300" width="56" height="56" rx="3" class="chip"/><text x="200" y="325" class="chip-t">USB-</text><text x="200" y="339" class="chip-t">UART</text>`,`<rect class="hl" x="167" y="295" width="66" height="66" rx="4"/>`);
+  s+=part('ldo',`<rect x="210" y="410" width="46" height="28" rx="2" class="chip"/><text x="233" y="428" class="chip-t">LDO</text>`,`<rect class="hl" x="205" y="405" width="56" height="38" rx="4"/>`);
+  s+=part('led',`<circle cx="170" cy="424" r="7" class="pled"/><text x="170" y="450" class="tiny">PWR</text>`,`<rect class="hl" x="152" y="408" width="36" height="48" rx="4"/>`);
+  s+=part('en',`<rect x="140" y="520" width="34" height="34" rx="4" class="bbtn"/><circle cx="157" cy="537" r="9" class="bbtn-cap"/><text x="157" y="570" class="tiny">EN</text>`,`<rect class="hl" x="135" y="515" width="44" height="60" rx="4"/>`);
+  s+=part('boot',`<rect x="226" y="520" width="34" height="34" rx="4" class="bbtn"/><circle cx="243" cy="537" r="9" class="bbtn-cap"/><text x="243" y="570" class="tiny">BOOT</text>`,`<rect class="hl" x="221" y="515" width="44" height="60" rx="4"/>`);
+  s+=part('usb',`<rect x="170" y="585" width="60" height="46" rx="4" class="usb"/><rect x="182" y="600" width="36" height="12" rx="2" class="usb-hole"/>`,`<rect class="hl" x="165" y="580" width="70" height="56" rx="4"/>`);
+  // headers
+  let hdr=`<text x="122" y="38" class="hdr-t">J2</text><text x="278" y="38" class="hdr-t">J3</text>`;
+  const pinG=(p,side,i)=>{
+    const [name,num,cat]=p, x=side==='L'?122:278, y=pinY(i);
+    const lbl=cat==='flash'?`${name} (${num})`:name;
+    const t=side==='L'?`<text x="100" y="${y+4}" text-anchor="end" class="plabel">${lbl}</text>`:`<text x="300" y="${y+4}" class="plabel">${lbl}</text>`;
+    const glyph=`<rect x="${x-8}" y="${y-8}" width="16" height="16" rx="3" class="pinglyph cat-${cat}"/><circle cx="${x}" cy="${y}" r="3" class="pinhole"/>`;
+    if(mode==='pins') return `<g class="pin" data-side="${side}" data-i="${i}" data-cat="${cat}" tabindex="0" role="button" aria-label="${name}${num!=null&&!/\d/.test(name)?' GPIO'+num:''}, ${CATS[cat].n}">${glyph}${t}</g>`;
+    return glyph+t;
+  };
+  PINS_L.forEach((p,i)=>hdr+=pinG(p,'L',i));
+  PINS_R.forEach((p,i)=>hdr+=pinG(p,'R',i));
+  if(mode==='parts') s+=`<g class="part" data-part="headers" tabindex="0" role="button" aria-label="${PARTS.headers.n}">${hdr}<rect class="hl" x="110" y="44" width="24" height="568" rx="4"/><rect class="hl" x="266" y="44" width="24" height="568" rx="4"/></g>`;
+  else s+=hdr;
+  if(mode==='parts'){
+    const mk=`<defs><marker id="arP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#ff8a80"/></marker><marker id="arD" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#b9a6ff"/></marker></defs>`;
+    s+=mk;
+    s+=`<g class="ovl ovl-power" pointer-events="none" style="display:none">
+      <path d="M215 590 V445" marker-end="url(#arP)"/><text x="219" y="500">5 V</text>
+      <path d="M248 410 V236" marker-end="url(#arP)"/><text x="244" y="390" text-anchor="end">3.3 V</text>
+      <path d="M214 410 V384 H138 V70 L131 63" marker-end="url(#arP)"/><text x="142" y="282">→ 3V3 pin</text>
+      <path d="M170 606 H134" marker-end="url(#arP)"/><text x="142" y="598">5V pin</text>
+    </g>`;
+    s+=`<g class="ovl ovl-data" pointer-events="none" style="display:none">
+      <path d="M200 585 V362" marker-end="url(#arD)"/><text x="196" y="478" text-anchor="end">USB data</text>
+      <path d="M200 300 V236" marker-end="url(#arD)"/><text x="204" y="272">serial</text>
+      <path d="M228 316 H262 V158" marker-end="url(#arD)"/><text x="258" y="250" text-anchor="end">TX/RX</text>
+      <path d="M186 356 V496 H157 V514" marker-end="url(#arD)"/><path d="M206 356 V490 H243 V514" marker-end="url(#arD)"/><text x="200" y="510" text-anchor="middle">auto-reset</text>
+    </g>`;
+  }
+  return s+'</svg>';
+}
+
+/* parts mode */
+let selPart='module';
+function renderPartInfo(){
+  const p=PARTS[selPart];
+  $('#partInfo').innerHTML=`<h3>${p.n}</h3><dl><dt>What it does</dt><dd>${p.what}</dd><dt>Why it's needed</dt><dd>${p.why}</dd><dt>What goes wrong / how you'd notice</dt><dd>${p.fail}</dd></dl>`;
+  $$('#boardParts .part').forEach(g=>g.classList.toggle('sel',g.dataset.part===selPart));
+}
+$('#boardParts').innerHTML=boardSVG('parts');
+$('#boardParts').addEventListener('click',e=>{const g=e.target.closest('.part'); if(g){selPart=g.dataset.part;renderPartInfo();}});
+$('#boardParts').addEventListener('keydown',e=>{const g=e.target.closest('.part'); if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selPart=g.dataset.part;renderPartInfo();}});
+function toggleOvl(btn,cls){const on=btn.getAttribute('aria-pressed')!=='true'; btn.setAttribute('aria-pressed',on); $('#boardParts .'+cls).style.display=on?'':'none';}
+$('#ovlPower').addEventListener('click',e=>toggleOvl(e.currentTarget,'ovl-power'));
+$('#ovlData').addEventListener('click',e=>toggleOvl(e.currentTarget,'ovl-data'));
+$('#partsReset').addEventListener('click',()=>{selPart='module';['ovlPower','ovlData'].forEach(id=>$('#'+id).setAttribute('aria-pressed','false'));$$('#boardParts .ovl').forEach(o=>o.style.display='none');renderPartInfo();});
+renderPartInfo();
+
+/* exploded module */
+let exploded=false;
+function drawExplode(){
+  const dy=exploded?-215:0, op=exploded?.6:1;
+  $('#explodeSvg').innerHTML=`<svg viewBox="0 ${exploded?-110:30} 400 ${exploded?410:270}" role="img" aria-label="Module ${exploded?'with shield lifted showing chip, flash and crystal':'with shield in place'}">
+    <rect x="20" y="40" width="360" height="250" rx="6" fill="var(--pcb)"/>
+    <path d="M40 70 h30 v-22 h20 v22 h20 v-22 h20 v22 h20 v-22 h20 v22 h20" fill="none" stroke="#d7b56d" stroke-width="3"/><text x="230" y="64" class="tiny" text-anchor="start">antenna</text>
+    <g>
+      <rect x="60" y="130" width="90" height="90" rx="4" class="chip"/><text x="105" y="170" class="chip-t">ESP32</text><text x="105" y="184" class="chip-t">chip</text>
+      <rect x="200" y="140" width="80" height="50" rx="3" class="chip"/><text x="240" y="162" class="chip-t">flash</text><text x="240" y="176" class="chip-t">(program)</text>
+      <rect x="300" y="205" width="50" height="26" rx="10" fill="#c0c4c8" stroke="#777"/><text x="325" y="250" class="tiny">40 MHz crystal</text>
+      <path d="M150 150 H200 M150 158 H200 M150 166 H200 M150 174 H200 M150 182 H200 M150 190 H200" stroke="#e9c46a" stroke-width="1.6"/>
+      <text x="175" y="210" class="tiny">GPIO6–11</text>
+      <path d="M150 212 H300" stroke="#e9c46a" stroke-width="1.6"/>
+      <path d="M90 220 V266 M100 220 V266 M110 220 V266 M120 220 V266" stroke="#e9c46a" stroke-width="1.6"/><text x="105" y="282" class="tiny">to header pins</text>
+    </g>
+    <g style="transform:translateY(${dy}px);transition:transform .6s, opacity .6s;opacity:${op}">
+      <rect x="40" y="112" width="330" height="134" rx="4" class="shield"/><text x="205" y="184" class="shield-t">metal shield</text>
+    </g>
+  </svg>`;
+  $('#explodeBtn').textContent=exploded?'Reassemble':'Lift the shield (exploded view)';
+  $('#explodeBtn').setAttribute('aria-pressed',exploded);
+}
+$('#explodeBtn').addEventListener('click',()=>{exploded=!exploded;drawExplode();});
+drawExplode();
+
+/* pins mode */
+const ALLPINS=[...PINS_L.map((p,i)=>({p,side:'L',i,hdr:'J2'})),...PINS_R.map((p,i)=>({p,side:'R',i,hdr:'J3'}))];
+const catOn=new Set(Object.keys(CATS));
+let selPin={side:'R',i:1};
+$('#boardPins').innerHTML=boardSVG('pins');
+const filt=$('#pinFilters');
+Object.entries(CATS).forEach(([k,c])=>{
+  const n=ALLPINS.filter(x=>x.p[2]===k).length;
+  const l=document.createElement('label'); l.className='chip-f';
+  l.innerHTML=`<input type="checkbox" checked data-cat="${k}"><span class="sw" style="background:var(--c-${k})"></span>${c.n} (${n})`;
+  filt.appendChild(l);
+});
+filt.addEventListener('change',e=>{const k=e.target.dataset.cat; if(!k)return; e.target.checked?catOn.add(k):catOn.delete(k); renderPins();});
+function renderPins(){
+  $$('#boardPins .pin').forEach(g=>{
+    g.classList.toggle('dim',!catOn.has(g.dataset.cat));
+    g.classList.toggle('sel',g.dataset.side===selPin.side&&+g.dataset.i===selPin.i);
+  });
+  const x=ALLPINS.find(a=>a.side===selPin.side&&a.i===selPin.i);
+  const [name,num,cat]=x.p, c=CATS[cat];
+  const note=PIN_NOTES[num!=null?num:name]||'';
+  $('#pinInfo').innerHTML=`<h3>${name}${num!=null?` <span class="pill">GPIO${num}</span>`:''}</h3>
+    <p style="margin:0"><span class="sw" style="background:var(--c-${cat})"></span> <strong>${c.n}</strong> · header ${x.hdr}, pin ${x.i+1} from the top</p>
+    <dl><dt>Meaning</dt><dd>${c.d}</dd>
+    ${num!=null?`<dt>In code</dt><dd><code>${num}</code></dd><dt>Can drive an LED?</dt><dd>${c.out}</dd><dt>Internal pull-up/down?</dt><dd>${c.pull}</dd>`:''}
+    ${note?`<dt>Note</dt><dd>${note}</dd>`:''}</dl>`;
+}
+function pickPin(g){selPin={side:g.dataset.side,i:+g.dataset.i};renderPins();}
+$('#boardPins').addEventListener('click',e=>{const g=e.target.closest('.pin'); if(g) pickPin(g);});
+$('#boardPins').addEventListener('keydown',e=>{const g=e.target.closest('.pin'); if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();pickPin(g);}});
+renderPins();
+
+/* pin picker exercise */
+const GP=ALLPINS.filter(a=>a.p[1]!=null).map(a=>a.p).sort((a,b)=>a[1]-b[1]);
+const TASKS=[
+  {id:'led',q:'Drive an LED (output).',good:['gpio']},
+  {id:'btn',q:'Read a button using INPUT_PULLUP (no extra resistor).',good:['gpio']},
+  {id:'sens',q:'Read a motion sensor that actively outputs 0 V or 3.3 V itself. You want to keep output-capable pins free.',good:['inonly','gpio'],best:'inonly'}
+];
+function pickFeedback(t,cat,num){
+  if(cat==='flash') return [false,'GPIO'+num+' belongs to the flash bus inside the module; touching it crashes the program.'];
+  if(cat==='serial') return [false,'GPIO'+num+' is the USB serial line; your circuit would fight uploads and Serial Monitor.'];
+  if(cat==='strap') return [false,'GPIO'+num+' is a strapping pin. It might work, but a circuit that holds the wrong level at reset can stop the board from booting. Prefer a general GPIO.'];
+  if(cat==='inonly'){
+    if(t.id==='led') return [false,'GPIO'+num+' is input-only: it has no output driver, so it cannot supply current to an LED.'];
+    if(t.id==='btn') return [false,'GPIO'+num+' has no internal pull-up, so INPUT_PULLUP does nothing and the pin floats. You would need an external resistor.'];
+    return [true,'Ideal: the sensor drives the level itself, so no pull-up is needed, and you save an output-capable pin.'];
+  }
+  if(t.id==='sens') return [true,'Works. Even better: an input-only pin (34–39) would do this job and keep GPIO'+num+' free for outputs.'];
+  return [true,'General GPIO: can be output or input and has internal pull-up/down. Good choice.'];
+}
+const pickState=store.get('picker',{});
+const rows=$('#pickerRows');
+TASKS.forEach(t=>{
+  const d=document.createElement('div'); d.style.margin='10px 0';
+  d.innerHTML=`<label class="inline" style="flex-wrap:wrap"><span>${t.q}</span> <select data-t="${t.id}"><option value="">choose…</option>${GP.map(p=>`<option value="${p[1]}">GPIO${p[1]}${p[0].startsWith('IO')?'':' ('+p[0]+')'}</option>`).join('')}</select></label><div class="fb" aria-live="polite"></div>`;
+  rows.appendChild(d);
+  const sel=$('select',d), fb=$('.fb',d);
+  const evalIt=()=>{
+    if(sel.value===''){fb.textContent='';return;}
+    const p=GP.find(x=>x[1]===+sel.value); const [ok,msg]=pickFeedback(t,p[2],p[1]);
+    fb.className='fb '+(ok?'good':'badv'); fb.textContent=(ok?'✓ ':'✗ ')+msg;
+    pickState[t.id]=ok?sel.value:''; store.set('picker',pickState);
+    if(TASKS.every(x=>pickState[x.id])){ solve('c3-picker'); $('#pickerSummary').textContent='All three jobs have suitable pins.'; }
+  };
+  sel.addEventListener('change',evalIt);
+  if(pickState[t.id]){sel.value=pickState[t.id];evalIt();}
+});
+
+/* ---------- CHAPTER 4: breadboard ---------- */
+(function(){
+  const cols=12, x0=64, dx=40;
+  const rowsTop=['a','b','c','d','e'], rowsBot=['f','g','h','i','j'];
+  const yTop=[80,100,120,140,160], yBot=[205,225,245,265,285];
+  let s=`<svg viewBox="0 0 560 360" role="group" aria-label="Breadboard with selectable hole groups"><rect x="20" y="8" width="520" height="344" rx="8" class="bbboard"/>`;
+  s+=`<rect x="20" y="176" width="520" height="14" fill="var(--bg)"/><text x="280" y="187" class="smuted" text-anchor="middle">centre gap</text>`;
+  s+=`<line x1="${x0-12}" y1="22" x2="${x0+dx*(cols-1)+12}" y2="22" class="rail-p"/><line x1="${x0-12}" y1="60" x2="${x0+dx*(cols-1)+12}" y2="60" class="rail-g"/>`;
+  s+=`<line x1="${x0-12}" y1="306" x2="${x0+dx*(cols-1)+12}" y2="306" class="rail-p"/><line x1="${x0-12}" y1="344" x2="${x0+dx*(cols-1)+12}" y2="344" class="rail-g"/>`;
+  s+=`<text x="34" y="36" class="slabel" fill="var(--w-pwr)">+</text><text x="34" y="52" class="slabel">−</text><text x="34" y="320" class="slabel">+</text><text x="34" y="336" class="slabel">−</text>`;
+  rowsTop.forEach((r,k)=>s+=`<text x="40" y="${yTop[k]+4}" class="smuted">${r}</text>`);
+  rowsBot.forEach((r,k)=>s+=`<text x="40" y="${yBot[k]+4}" class="smuted">${r}</text>`);
+  const rail=(id,y,label)=>{let g=`<g class="bb-strip" tabindex="0" role="button" data-id="${id}" data-label="${label}" aria-label="${label}"><rect class="clip" x="${x0-10}" y="${y-7}" width="${dx*(cols-1)+20}" height="14" rx="5"/>`;for(let c=0;c<cols;c++)g+=`<rect class="hole" x="${x0+c*dx-4}" y="${y-4}" width="8" height="8" rx="1"/>`;return g+`<rect x="${x0-10}" y="${y-9}" width="${dx*(cols-1)+20}" height="18" fill="transparent"/></g>`;};
+  s+=rail('r1',30,'Top + rail: all holes along this line are connected');
+  s+=rail('r2',48,'Top − rail: all holes along this line are connected');
+  s+=rail('r3',314,'Bottom + rail: all holes along this line are connected');
+  s+=rail('r4',334,'Bottom − rail: all holes along this line are connected');
+  for(let c=0;c<cols;c++){
+    const x=x0+c*dx;
+    s+=`<text x="${x}" y="72" class="smuted" text-anchor="middle">${c+1}</text>`;
+    [['t',yTop,rowsTop],['b',yBot,rowsBot]].forEach(([h,ys,rs])=>{
+      const label=`Column ${c+1}, rows ${rs[0]}–${rs[4]}: these 5 holes are one connection point`;
+      s+=`<g class="bb-strip" tabindex="0" role="button" data-id="${h}${c}" data-label="${label}" aria-label="Column ${c+1} rows ${rs[0]} to ${rs[4]}"><rect class="clip" x="${x-7}" y="${ys[0]-8}" width="14" height="${ys[4]-ys[0]+16}" rx="5"/>`;
+      ys.forEach(y=>s+=`<rect class="hole" x="${x-4}" y="${y-4}" width="8" height="8" rx="1"/>`);
+      s+=`<rect x="${x-10}" y="${ys[0]-10}" width="20" height="${ys[4]-ys[0]+20}" fill="transparent"/></g>`;
+    });
+  }
+  s+='</svg>';
+  $('#bbsvg').innerHTML=s;
+  const pick=g=>{ $$('#bbsvg .bb-strip').forEach(x=>x.classList.toggle('on',x===g)); $('#bbinfo').textContent=g.dataset.label+'.'; };
+  $('#bbsvg').addEventListener('click',e=>{const g=e.target.closest('.bb-strip'); if(g) pick(g);});
+  $('#bbsvg').addEventListener('keydown',e=>{const g=e.target.closest('.bb-strip'); if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();pick(g);}});
+})();
+
+/* ---------- CHAPTER 5: LED calculator ---------- */
+const RVALS=[0,47,100,150,220,330,470,1000,2200,4700,10000];
+const LEDCOL={'2.0':'#ff2a1f','2.1':'#ffc400','2.2':'#3ad13a','3.0':'#2f6bff','3.0w':'#e8f0ff'};
+function fmtR(r){return r===0?'none (0 Ω)':r>=1000?(r/1000)+' kΩ':r+' Ω';}
+function drawLedCalc(){
+  const r=RVALS[+$('#resSlider').value], key=$('#ledColor').value, vf=parseFloat(key), vs=parseFloat($('#supplySel').value), vfS=vf.toFixed(1);
+  $('#resVal').textContent=fmtR(r);
+  const vr=Math.max(0,vs-vf);
+  let I=null; // mA
+  if(r>0) I=vr/r*1000;
+  const col=LEDCOL[key];
+  let lvl, cls, msg;
+  if(r===0){ lvl=1; cls='badv'; msg='No resistor: in this model the current is unlimited. In reality it climbs until the pin\'s driver limits it — far beyond what the LED needs, and outside anything the datasheet promises is safe. It may “work” for a while; you are relying on an accident.'; }
+  else if(I<0.5){ lvl=I/0.5*0.15; cls='mid'; msg='Very low current: barely visible or off.'; }
+  else if(I<2){ lvl=0.15+(I-0.5)/1.5*0.25; cls='mid'; msg='Dim but visible (modern LEDs are efficient).'; }
+  else if(I<=10){ lvl=0.4+(I-2)/8*0.45; cls='good'; msg='Comfortable indicator range (about 2–10 mA). This is where you want to be.'; }
+  else if(I<=20){ lvl=0.9; cls='mid'; msg='Bright, but uses more current than an indicator needs. Real current will be somewhat lower because the pin voltage sags under load.'; }
+  else { lvl=1; cls='badv'; msg='Too much for this setup: above the ESP32\'s default ~20 mA drive setting and the typical rating of small LEDs. The real current would be lower than calculated because the pin can\'t hold 3.3 V — the model is no longer reliable.'; }
+  if(vf>=3&&vs<4&&r>0) msg+=' With blue/white LEDs at 3.3 V only ~0.3 V is left for the resistor, so small differences between individual LEDs change the current a lot — treat this number as rough.';
+  if(vs===5) msg+=' Note: the 5V pin can\'t be switched by code, and must never touch a GPIO; this option only shows how the supply changes the calculation.';
+  const st=$('#istatus'); st.className='status '+cls; st.textContent=msg;
+  $('#iread').innerHTML=r===0?`I = (${vs} V − ${vfS} V) / 0 Ω → not defined (model breaks down)`:
+    `I = (V<sub>supply</sub> − V<sub>F</sub>) / R = (${vs} V − ${vfS} V) / ${r} Ω = ${(vr/r).toFixed(5)} A ≈ <strong>${I<1?I.toFixed(2):I.toFixed(1)} mA</strong>`;
+  // budget
+  const fr=vs>0?vr/vs:0, fl=1-fr;
+  $('#bR').style.width=(fr*100)+'%'; $('#bL').style.width=(fl*100)+'%';
+  $('#bR').textContent=fr>0.12?`resistor ${vr.toFixed(1)} V`:''; $('#bL').textContent=`LED ${Math.min(vf,vs).toFixed(1)} V`;
+  $('#budget').setAttribute('aria-label',`Voltage budget: resistor ${vr.toFixed(1)} volts, LED ${vfS} volts, of ${vs} volts supply`);
+  const pos=r===0?100:Math.min(100,I/30*100);
+  $('#ineedle').style.left=`calc(${pos}% - 1.5px)`;
+  $('#imeter').setAttribute('aria-label','Current meter: '+(r===0?'off the scale':I.toFixed(1)+' milliamperes'));
+  $('#imeter').setAttribute('role','img');
+  const resSym=r===0?`<path d="M150 70 H230" class="wire w-sig"/><text x="190" y="54" class="sbad" text-anchor="middle">no resistor!</text>`:
+    `<path d="M150 70 l6 -10 l12 20 l12 -20 l12 20 l12 -20 l12 20 l8 -10" class="sym"/><text x="190" y="46" class="slabel" text-anchor="middle">${fmtR(r)}</text><text x="190" y="104" class="smuted" text-anchor="middle">${vr.toFixed(1)} V across</text>`;
+  $('#ledcircuit').innerHTML=`<svg viewBox="0 0 520 170" role="img" aria-label="Series LED circuit: ${vs===5?'5V pin':'GPIO at 3.3 volts'}, ${fmtR(r)} resistor, LED with forward voltage ${vfS} volts, to ground">
+    <rect x="10" y="44" width="100" height="52" rx="6" class="blk"/><text x="60" y="66" class="slabel" text-anchor="middle">${vs===5?'5V pin':'GPIO23'}</text><text x="60" y="84" class="smuted" text-anchor="middle">${vs} V</text>
+    <path d="M110 70 H150 M230 70 H290" class="wire w-sig"/>${resSym}
+    <circle cx="315" cy="70" r="34" fill="${col}" opacity="${(lvl*0.75).toFixed(2)}"/>
+    <path d="M300 52 L300 88 L332 70 Z" class="ledfill"/><line x1="332" y1="52" x2="332" y2="88" class="sym"/>
+    <text x="316" y="118" class="smuted" text-anchor="middle">LED ${vfS} V</text>
+    <path d="M332 70 H420 V130" class="wire w-gnd"/>
+    <path d="M404 130 H436 M410 137 H430 M416 144 H424" class="sym"/><text x="446" y="140" class="slabel">GND 0 V</text>
+    <text x="250" y="164" class="smuted" text-anchor="middle">brightness drawn illustratively</text>
+  </svg>`;
+}
+['ledColor','resSlider','supplySel'].forEach(id=>$('#'+id).addEventListener('input',drawLedCalc));
+$('#ledReset').addEventListener('click',()=>{$('#ledColor').value='2.0';$('#resSlider').value=4;$('#supplySel').value='3.3';drawLedCalc();});
+drawLedCalc();
+
+/* ---------- CHAPTER 6: input lab ---------- */
+const INMODES={
+  float:{n:'No pull resistor (INPUT), button to GND',pull:'none',to:'gnd',code:'INPUT'},
+  pullup:{n:'Internal pull-up (INPUT_PULLUP), button to GND ✓',pull:'up',to:'gnd',code:'INPUT_PULLUP'},
+  pulldown:{n:'Internal pull-down (INPUT_PULLDOWN), button to 3V3 ✓',pull:'down',to:'3v3',code:'INPUT_PULLDOWN'},
+  upto3:{n:'Pull-up, but button wired to 3V3',pull:'up',to:'3v3',code:'INPUT_PULLUP'},
+  wire:{n:'Plain wire to 3V3 instead of a pull-up resistor, button to GND',pull:'wire',to:'gnd',code:'INPUT'}
+};
+let inMode='float', inV=1.6, inPrev=1, inPaused=false, inTimer=null;
+const inHist=[];
+const inBox=$('#inModes');
+Object.entries(INMODES).forEach(([k,m])=>{const l=document.createElement('label'); l.innerHTML=`<input type="radio" name="inmode" value="${k}" ${k===inMode?'checked':''}> <span>${m.n}</span>`; inBox.appendChild(l);});
+inBox.addEventListener('change',e=>{inMode=e.target.value; inHist.length=0; inStep(); });
+const inHoldCtl=holdButton($('#inHold'),$('#inLatch'),()=>inStep());
+function inCompute(pressed){
+  const m=INMODES[inMode];
+  if(m.pull==='wire'&&pressed) return {v:null,r:null,short:true};
+  if(pressed){ const v=m.to==='gnd'?0:3.3; return {v,r:v>1.65?1:0}; }
+  if(m.pull==='up'||m.pull==='wire') return {v:3.3,r:1};
+  if(m.pull==='down') return {v:0,r:0};
+  // floating: illustrative random walk
+  inV+= (Math.random()-0.5)*1.1; if(Math.random()<0.06) inV=Math.random()*3.3; inV=Math.max(0,Math.min(3.3,inV));
+  let r; if(inV>=2.475) r=1; else if(inV<=0.825) r=0; else r=Math.random()<0.5?inPrev:1-inPrev;
+  inPrev=r; return {v:inV,r};
+}
+function inDrawCircuit(pressed,short){
+  const m=INMODES[inMode];
+  const by=pressed?115:101;
+  let pull='';
+  if(m.pull==='up') pull=`<path d="M150 115 V88 l-9 -4 l18 -8 l-18 -8 l18 -8 l-18 -8 l9 -4 V25" class="sym"/><text x="168" y="70" class="slabel">≈45 kΩ pull-up</text>`;
+  else if(m.pull==='down') pull=`<path d="M150 115 V140 l-9 4 l18 8 l-18 8 l18 8 l-18 8 l9 4 V205" class="sym"/><text x="168" y="165" class="slabel">≈45 kΩ pull-down</text>`;
+  else if(m.pull==='wire') pull=`<path d="M150 115 V25" class="wire w-pwr"/><text x="160" y="70" class="sbad">plain wire!</text>`;
+  else pull=`<text x="160" y="70" class="smuted">no pull resistor</text>`;
+  const ret=m.to==='gnd'?`<path d="M320 115 H350 V205" class="wire w-gnd"/>`:`<path d="M320 115 H350 V25" class="wire w-pwr"/>`;
+  const inside=(m.pull==='up'||m.pull==='down')?`<rect x="8" y="34" width="${m.pull==='up'?280:280}" height="160" rx="8" fill="none" stroke="var(--muted)" stroke-dasharray="5 4"/><text x="16" y="186" class="smuted">inside the ESP32</text>`:'';
+  $('#insvg').innerHTML=`<svg viewBox="0 0 430 225" role="img" aria-label="Input circuit: ${m.n}; button ${pressed?'pressed':'released'}${short?'; short circuit':''}">
+    <path d="M100 25 H380" class="rail-p"/><text x="384" y="29" class="slabel">3V3</text>
+    <path d="M100 205 H380" class="rail-g"/><text x="384" y="209" class="slabel">GND</text>
+    ${inside}
+    <rect x="18" y="95" width="90" height="40" rx="6" class="blk"/><text x="63" y="113" class="slabel" text-anchor="middle">GPIO18</text><text x="63" y="128" class="smuted" text-anchor="middle">input</text>
+    <path d="M108 115 H260" class="wire w-btn"/><circle cx="150" cy="115" r="4" fill="var(--text)"/>
+    ${pull}
+    <circle cx="264" cy="115" r="4" class="symfill"/><circle cx="316" cy="115" r="4" class="symfill"/>
+    <path d="M258 ${by} H322 M290 ${by} V${by-12} M280 ${by-12} H300" class="sym"/>
+    <text x="290" y="145" class="smuted" text-anchor="middle">button</text>
+    ${ret}
+    ${short?'<text x="200" y="222" class="sbad" text-anchor="middle">⚡ SHORT: 3V3 tied straight to GND</text>':''}
+  </svg>`;
+}
+function inDrawChart(){
+  const W=400,x0=46,N=80,step=(W-x0-4)/(N-1);
+  const vy=v=>12+(3.3-v)/3.3*58, ry=r=>r?92:126;
+  let vp='',rp='';
+  inHist.forEach((h,k)=>{const x=(x0+k*step).toFixed(1);
+    if(h.v==null){vp+=' ';rp+=' ';return;}
+    vp+=(vp.trim()===''||vp.endsWith(' ')?'M':'L')+x+' '+vy(h.v).toFixed(1);
+    rp+=(rp.trim()===''||rp.endsWith(' ')?'M':'L')+x+' '+ry(h.r);
+    if(k<inHist.length-1&&inHist[k+1].v!=null) rp+=' L'+(x0+(k+1)*step).toFixed(1)+' '+ry(h.r);
+  });
+  $('#inchart').innerHTML=`<svg viewBox="0 0 400 140" role="img" aria-label="Charts of pin voltage and digitalRead result over time">
+    <rect x="${x0}" y="${vy(2.475)}" width="${W-x0}" height="${vy(0.825)-vy(2.475)}" fill="var(--surface2)"/>
+    <text x="${W-4}" y="${(vy(2.475)+vy(0.825))/2+3}" class="smuted" text-anchor="end" font-size="9">not guaranteed</text>
+    <line x1="${x0}" x2="${W}" y1="${vy(2.475)}" y2="${vy(2.475)}" stroke="var(--muted)" stroke-dasharray="3 3"/><line x1="${x0}" x2="${W}" y1="${vy(0.825)}" y2="${vy(0.825)}" stroke="var(--muted)" stroke-dasharray="3 3"/>
+    <text x="40" y="${vy(3.3)+4}" class="smuted" text-anchor="end" font-size="9">3.3 V</text><text x="40" y="${vy(0)+3}" class="smuted" text-anchor="end" font-size="9">0 V</text>
+    <text x="40" y="96" class="smuted" text-anchor="end" font-size="9">read 1</text><text x="40" y="130" class="smuted" text-anchor="end" font-size="9">read 0</text>
+    <line x1="${x0}" x2="${W}" y1="80" y2="80" stroke="var(--border)"/>
+    <path d="${vp}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    <path d="${rp}" fill="none" stroke="var(--c-gpio)" stroke-width="2.5"/>
+  </svg>`;
+}
+const IN_EXPLAIN={
+  float:['badv','Released, nothing defines the pin voltage: it drifts with stray fields and the reading flips at random. Pressing works (pin tied to GND), which is why this bug can hide during a quick test.'],
+  pullup:['good','Released: the pull-up holds the pin at 3.3 V → reads 1. Pressed: the button connects the pin to GND → reads 0 (active-low). Only ≈73 µA flows through the 45 kΩ resistor while pressed.'],
+  pulldown:['good','Released: the pull-down holds the pin at 0 V → reads 0. Pressed: the button connects the pin to 3V3 → reads 1 (active-high). Equally valid; just wire the button to 3V3.'],
+  upto3:['badv','Both the pull-up and the button connect the pin to 3.3 V, so pressing changes nothing: it always reads 1. The button must connect the pin to the <em>opposite</em> level of the pull resistor.'],
+  wire:['badv','Released it reads 1. But pressing connects 3V3 directly to GND — a short circuit. The current is limited only by the regulator; the supply collapses and the board may reset. The pull resistor exists precisely to limit this current.']
+};
+function inStep(){
+  const pressed=inHoldCtl.pressed;
+  const res=inCompute(pressed);
+  if(!inPaused||inHist.length===0){ inHist.push(res); if(inHist.length>80) inHist.shift(); }
+  inDrawCircuit(pressed,!!res.short);
+  inDrawChart();
+  const m=INMODES[inMode];
+  $('#inread').innerHTML=`pinMode(18, ${m.code});<br>button: ${pressed?'pressed':'released'}<br>pin voltage: ${res.short?'collapsing — short!':res.v.toFixed(2)+' V'}<br>digitalRead(18) → ${res.short?'meaningless':res.r}`;
+  const [c,t]=IN_EXPLAIN[inMode]; const ex=$('#inexplain'); ex.className='status '+c; ex.innerHTML=t;
+}
+$('#inPause').addEventListener('click',e=>{inPaused=!inPaused; e.currentTarget.setAttribute('aria-pressed',inPaused); e.currentTarget.textContent=inPaused?'Resume chart':'Pause chart';});
+$('#inReset').addEventListener('click',()=>{inMode='float';$$('#inModes input').forEach(i=>i.checked=i.value==='float');inHist.length=0;inPaused=false;$('#inPause').setAttribute('aria-pressed','false');$('#inPause').textContent='Pause chart';inHoldCtl.reset();inStep();});
+inStep();
+
+/* ---------- LAB (ch0 + ch7) ---------- */
+const FAULTS={
+  ok:{n:'Working circuit (no fault)',pred:'A',ex:'Everything as designed: the pull-up holds GPIO18 at 1; pressing pulls it to 0; the code then drives GPIO23 HIGH and the LED loop closes through the GND rail.'},
+  float:{n:'Code uses INPUT instead of INPUT_PULLUP',pred:'E',ex:'Without the pull-up the released pin floats, so Serial shows random 0s and 1s and the LED flickers. Pressing still works — the button ties the pin to GND — which is why this bug survives a quick test.'},
+  btn3v3:{n:'Button\'s second leg wired to the 3V3 rail instead of GND',pred:'C',ex:'The pull-up already holds the pin at 3.3 V; pressing connects it to 3.3 V again. The reading never changes from 1, so the code never turns the LED on.'},
+  rotated:{n:'Button rotated 90° on the breadboard',pred:'D',ex:'A permanently joined pair of legs connects GPIO18 to GND all the time. The pin always reads 0, so the code keeps the LED on.'},
+  nognd:{n:'Board GND not connected to the GND rail',pred:'C',ex:'Both loops return through the rail, and the rail is now connected to nothing. The LED loop is open (never lights), and pressing connects GPIO18 to a dead rail, so the pull-up keeps it at 1. One missing wire, two broken behaviours.'},
+  nores:{n:'Resistor replaced by a plain wire',pred:'G',ex:'It “works” and the LED is very bright. Nothing limits the current except the pin driver and the LED itself — beyond what the LED needs and outside any safe rating. It may run for a while, or gradually damage the LED or the pin. Working is not the same as correct.'},
+  led34:{n:'LED moved to GPIO34 (code changed to 34 as well)',pred:'B',ex:'GPIO34 is input-only: it has no output driver, so <code>digitalWrite</code> can\'t put 3.3 V on it (the Arduino core may also print an error, depending on version). The input half still works, so Serial changes normally.'},
+  rev:{n:'LED inserted backwards',pred:'B',ex:'The diode blocks current from cathode to anode. Pin voltage is fine and Serial is fine, but no current flows in the LED loop. At 3.3 V this is harmless; flip it.'},
+  r10k:{n:'10 kΩ resistor instead of 220 Ω',pred:'F',ex:'Current ≈ (3.3 − 2.0) / 10 000 ≈ 0.13 mA, roughly 45× less than designed. The LED glows faintly. Check the colour bands: 220 Ω = red-red-brown, 10 kΩ = brown-black-orange.'}
+};
+const PRED={A:'LED follows the button normally',B:'LED never lights, Serial still changes 1 → 0 when pressed',C:'LED never lights, Serial stuck at 1',D:'LED always on, Serial stuck at 0',E:'Serial shows random 0/1 while released; LED flickers',F:'Works, but the LED is very dim',G:'Works, LED extra bright — but the circuit is unsafe'};
+function simLab(f,pressed){
+  let reading;
+  if(f==='float') reading=pressed?0:(Math.random()<0.5?0:1);
+  else if(f==='btn3v3'||f==='nognd') reading=1;
+  else if(f==='rotated') reading=0;
+  else reading=pressed?0:1;
+  let level=0;
+  if(reading===0){
+    if(f==='led34'||f==='rev'||f==='nognd') level=0;
+    else if(f==='nores') level=1;
+    else if(f==='r10k') level=0.13;
+    else level=0.75;
+  }
+  return {reading,level};
+}
+function labSVG(f,pressed,level,showGlow){
+  const ledY=f==='led34'?150:120;
+  const sigPath=f==='led34'?'M160 150 H205 V120 H220':'M160 120 H220';
+  const res=f==='nores'?`<path d="M220 120 H290" class="wire w-sig"/><text x="255" y="104" class="sbad" text-anchor="middle">plain wire</text>`:
+    `<path d="M220 120 H226 l5 -9 l10 18 l10 -18 l10 18 l10 -18 l10 18 l5 -9 H290" class="sym"/><text x="255" y="100" class="slabel" text-anchor="middle">${f==='r10k'?'10 kΩ':'220 Ω'}</text>`;
+  const led=f==='rev'?`<path d="M368 104 L368 136 L338 120 Z" class="ledfill"/><line x1="338" y1="104" x2="338" y2="136" class="sym"/><text x="353" y="160" class="sbad" text-anchor="middle">reversed</text>`:
+    `<path d="M338 104 L338 136 L368 120 Z" class="ledfill"/><line x1="368" y1="104" x2="368" y2="136" class="sym"/><text x="330" y="96" class="smuted" text-anchor="end">anode</text><text x="374" y="96" class="smuted">cathode</text>`;
+  const by=pressed||f==='rotated'?199:185;
+  const btnRet=f==='btn3v3'?`<path d="M314 200 H412 a8 8 0 0 1 16 0 H500 V22" class="wire w-pwr"/><text x="506" y="110" class="sbad">to 3V3!</text>`:`<path d="M314 200 H345 V282" class="wire w-gnd"/>`;
+  const rot=f==='rotated'?`<path d="M268 206 H314" stroke="var(--bad)" stroke-width="3"/><text x="291" y="228" class="sbad" text-anchor="middle">legs always joined</text>`:'';
+  const gnd=f==='nognd'?`<path d="M160 240 H172 V282 H180" class="wire w-missing"/><text x="176" y="268" class="sbad">✗ missing</text>`:`<path d="M160 240 H172 V282 H180" class="wire w-gnd"/>`;
+  const pullTxt=f==='float'?'<text x="24" y="226" class="sbad" font-size="11">no pull-up (INPUT)</text>':'<text x="24" y="226" class="smuted">internal pull-up on 18</text>';
+  return `<svg viewBox="0 0 560 300" role="img" aria-label="Wiring diagram: ${FAULTS[f].n}; button ${pressed?'pressed':'released'}">
+    <rect x="16" y="40" width="144" height="220" rx="10" class="blk"/><text x="88" y="64" class="slabel" text-anchor="middle" font-weight="700">ESP32 board</text>
+    <text x="150" y="84" class="slabel" text-anchor="end">3V3</text><text x="150" y="124" class="slabel" text-anchor="end" ${f==='led34'?'opacity=".4"':''}>GPIO23</text>
+    <text x="150" y="154" class="slabel" text-anchor="end" ${f==='led34'?'':'opacity=".4"'}>GPIO34</text><text x="150" y="204" class="slabel" text-anchor="end">GPIO18</text><text x="150" y="244" class="slabel" text-anchor="end">GND</text>
+    ${pullTxt}
+    <path d="M180 22 H540" class="rail-p"/><text x="186" y="16" class="smuted">+ rail (3V3)</text>
+    <path d="M180 282 H540" class="rail-g"/><text x="186" y="297" class="smuted">− rail (GND)</text>
+    <path d="M160 80 H170 V22 H180" class="wire w-pwr"/>
+    ${gnd}
+    <path d="${sigPath}" class="wire w-sig"/>
+    ${res}
+    <path d="M290 120 H338" class="wire w-sig"/>
+    ${showGlow&&level>0?`<circle cx="353" cy="120" r="${f==='nores'?34:28}" class="glow" opacity="${(level*0.6).toFixed(2)}"/>`:''}
+    ${led}
+    <path d="M368 120 H420 V282" class="wire w-gnd"/>
+    <path d="M160 200 H264" class="wire w-btn"/>
+    <circle cx="268" cy="200" r="4" class="symfill"/><circle cx="314" cy="200" r="4" class="symfill"/>
+    <path d="M262 ${by} H320 M291 ${by} V${by-12} M282 ${by-12} H300" class="sym"/>
+    ${rot}${btnRet}
+    <text x="291" y="${f==='rotated'?246:224}" class="smuted" text-anchor="middle">button</text>
+  </svg>`;
+}
+/* preview (ch0) */
+let pvPressed=false;
+function drawPreview(){
+  const s=simLab('ok',pvPressed);
+  $('#previewsvg').innerHTML=labSVG('ok',pvPressed,s.level,true);
+  $('#previewtxt').textContent=pvPressed?'Button pressed → GPIO18 reads 0 → code sets GPIO23 HIGH → LED on.':'Button released → GPIO18 reads 1 → code sets GPIO23 LOW → LED off.';
+}
+holdButton($('#previewhold'),null,d=>{pvPressed=d;drawPreview();});
+drawPreview();
+$('#worksvg').innerHTML=labSVG('ok',false,0,false);
+
+/* fault lab (ch7) */
+let fault='ok', revealed=false, labTimer=null;
+const serialLines=[];
+const predDone=new Set(store.get('predDone',[]));
+const fl=$('#faultList');
+Object.entries(FAULTS).forEach(([k,f])=>{const l=document.createElement('label'); l.innerHTML=`<input type="radio" name="fault" value="${k}" ${k==='ok'?'checked':''}> <span>${f.n}</span>`; fl.appendChild(l);});
+fl.addEventListener('change',e=>{fault=e.target.value; revealed=false; serialLines.length=0; renderPredict(); labTick();});
+const labHoldCtl=holdButton($('#labHold'),$('#labLatch'),()=>labTick());
+function renderPredict(){
+  const box=$('#predictBox');
+  box.innerHTML=`<p class="qlabel">Predict</p><p class="qtext" style="margin-bottom:6px">With this fault, what will you observe as you press and release?</p>
+   <select id="predSel" style="max-width:100%"><option value="">choose a prediction…</option>${Object.entries(PRED).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+   <div class="controls"><button class="btn primary" type="button" id="predGo">Check &amp; run</button><button class="btn" type="button" id="predSkip">Skip, just show me</button></div><p class="fb" id="predFb" aria-live="polite"></p>`;
+  $('#predGo').addEventListener('click',()=>{
+    const v=$('#predSel').value, fb=$('#predFb');
+    if(!v){fb.className='fb';fb.textContent='Choose a prediction first (or skip).';return;}
+    const ok=v===FAULTS[fault].pred;
+    fb.className='fb '+(ok?'good':'badv');
+    fb.textContent=ok?'✓ Correct prediction.':'✗ Not what happens. Actual: '+PRED[FAULTS[fault].pred]+'. Compare with the explanation below.';
+    if(ok){predDone.add(fault);store.set('predDone',[...predDone]);}
+    $('#predScore').textContent=predDone.size;
+    if(predDone.size>=3) solve('c7-lab');
+    reveal();
+  });
+  $('#predSkip').addEventListener('click',reveal);
+  $('#veil').hidden=false; $('#labExplain').hidden=true;
+}
+function reveal(){revealed=true;$('#veil').hidden=true;const e=$('#labExplain');e.hidden=false;e.className='status '+(fault==='ok'?'good':fault==='nores'?'mid':'badv');e.innerHTML=FAULTS[fault].ex;labTick();}
+function labCode(){
+  const pin=fault==='led34'?'<mark>34</mark>':'23', mode=fault==='float'?'<mark>INPUT</mark>':'INPUT_PULLUP';
+  return `const int LED_PIN = ${pin};\nconst int BUTTON_PIN = 18;\nvoid setup() {\n  Serial.begin(115200);\n  pinMode(LED_PIN, OUTPUT);\n  pinMode(BUTTON_PIN, ${mode});\n}\nvoid loop() {\n  int reading = digitalRead(BUTTON_PIN);\n  digitalWrite(LED_PIN, reading == LOW ? HIGH : LOW);\n  Serial.println(reading);\n  delay(20);\n}`;
+}
+function labTick(){
+  const pressed=labHoldCtl.pressed, s=simLab(fault,pressed);
+  $('#labsvg').innerHTML=labSVG(fault,pressed,s.level,revealed);
+  serialLines.push(String(s.reading)); if(serialLines.length>9) serialLines.shift();
+  $('#serial').textContent=revealed?serialLines.join('\n'):'';
+  $('#labled').textContent=revealed?('LED: '+(s.level===0?'off':s.level<0.3?'on, very dim':s.level>=1?'on, very bright (unsafe)':'on')):'';
+  $('#labcode').innerHTML=labCode();
+}
+$('#labReset').addEventListener('click',()=>{fault='ok';$$('#faultList input').forEach(i=>i.checked=i.value==='ok');revealed=false;serialLines.length=0;labHoldCtl.reset();renderPredict();labTick();});
+$('#predScore').textContent=predDone.size;
+renderPredict(); labTick();
+
+/* sink completion task */
+$('#skCheck').addEventListener('click',()=>{
+  const a=$('#sk1').value,b=$('#sk2').value,c=$('#sk3').value, fb=$('#skFb');
+  const msgs=[];
+  if(a!=='OUTPUT') msgs.push(a===''?'Choose a pin mode.':'pinMode: the pin must <em>drive</em> its end of the LED to 0 V or 3.3 V, so it must be an OUTPUT.');
+  if(b&&b!=='LOW') msgs.push('Pressed: HIGH puts 3.3 V on both ends of the resistor–LED chain → no voltage across it → no current. It needs LOW.');
+  if(c&&c!=='HIGH') msgs.push('Released: LOW would light the LED. HIGH removes the voltage difference, so the LED goes off.');
+  if(!b||!c) msgs.push('Fill in both values.');
+  fb.className='fb '+(msgs.length?'badv':'good');
+  fb.innerHTML=msgs.length?'✗ '+msgs.join(' '):'✓ Correct. With wiring B the LED is active-low: LOW = on, HIGH = off. The pin “sinks” current to GND.';
+  if(!msgs.length) solve('c7-sink');
+});
+
+/* ticking for live labs: only while their chapter is visible */
+const ch6=chapters.findIndex(c=>c.contains($('#insvg'))), ch7=chapters.findIndex(c=>c.contains($('#labsvg')));
+enterHooks[ch6]=()=>{ if(!inTimer) inTimer=setInterval(inStep,150); };
+leaveHooks[ch6]=()=>{ clearInterval(inTimer); inTimer=null; };
+enterHooks[ch7]=()=>{ if(!labTimer) labTimer=setInterval(labTick,250); };
+leaveHooks[ch7]=()=>{ clearInterval(labTimer); labTimer=null; };
+
+/* ---------- rubric ---------- */
+const rub=new Set(store.get('rubric',[]));
+function rubSum(){ $('#rubricSum').textContent=`Self-assessed: ${rub.size} / 6 criteria. ${rub.size===6?'You can explain, choose, predict and troubleshoot within this module\'s scope.':rub.size>=4?'Solid — revisit the chapters behind any unticked line.':'Use the hints and the chapter links, then try the challenge again later.'}`; }
+$$('#rubric input').forEach(i=>{ i.checked=rub.has(i.dataset.r); i.addEventListener('change',()=>{ i.checked?rub.add(i.dataset.r):rub.delete(i.dataset.r); store.set('rubric',[...rub]); rubSum(); }); });
+rubSum();
+
+$('#resetAll').addEventListener('click',()=>{
+  if(!confirm('Reset visited chapters, solved exercises, your written answers and the self-check?')) return;
+  try{ Object.keys(localStorage).filter(k=>k.startsWith(KEY)&&k!==KEY+'theme').forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  location.hash='#ch0'; location.reload();
+});
+
+/* ---------- start ---------- */
+markSolved();
+if(window.innerWidth<900) $('#tocd').open=false;
+const start=fromHash();
+show(start!==null?start:0,false);
+})();
+</script>
+</body>
+</html>
